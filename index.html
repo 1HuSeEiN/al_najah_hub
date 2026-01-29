@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,316 +11,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --bg-dark: #020617;
-            --primary-blue: #3b82f6;
-            --secondary-orange: #f97316;
-            --accent-cyan: #06b6d4;
-            --gold: #fbbf24;
-            --insta-pink: #e1306c;
-            --text-white: #ffffff;
-            --text-slate: #94a3b8;
-            --glass: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --glass-bright: rgba(255, 255, 255, 0.07);
-        }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Cairo', sans-serif;
-            scroll-behavior: smooth;
-            -webkit-tap-highlight-color: transparent;
-        }
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-white);
-            overflow-x: hidden;
-            min-height: 100vh;
-            line-height: 1.6;
-            font-size: 16px;
-        }
-
-        /* --- Background Animation --- */
-        .bg-blobs {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .blob {
-            position: absolute;
-            width: 40vw;
-            height: 40vw;
-            min-width: 250px;
-            min-height: 250px;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.2;
-            animation: float-around 20s infinite alternate ease-in-out;
-        }
-
-        .blob-1 { background: var(--primary-blue); top: -10%; right: -10%; }
-        .blob-2 { background: var(--secondary-orange); bottom: -10%; left: -10%; animation-delay: -5s; }
-
-        @keyframes float-around {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(30px, 30px) scale(1.1); }
-        }
-
-        .container { 
-            width: 100%;
-            max-width: 1200px; 
-            margin: 0 auto; 
-            padding: 0 5%; 
-        }
-        
-        .glass {
-            background: var(--glass);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-        }
-
-        section { padding: 50px 0; }
-        .section-header { text-align: center; margin-bottom: 40px; }
-        .section-header h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 10px; }
-        .section-header p { color: var(--text-slate); font-size: 1rem; }
-
-        @media (min-width: 768px) {
-            .section-header h2 { font-size: 2.2rem; }
-            section { padding: 80px 0; }
-        }
-
-        /* --- Navigation --- */
-        nav {
-            position: sticky;
-            top: 15px;
-            z-index: 1000;
-            margin: 15px auto;
-            width: 95%;
-            max-width: 1100px;
-        }
-
-        .nav-inner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-        }
-
-        .nav-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 800;
-            font-size: 1.1rem;
-            color: var(--text-white);
-            text-decoration: none;
-        }
-
-        .nav-links { display: flex; gap: 20px; list-style: none; }
-        .nav-links a { 
-            text-decoration: none; 
-            color: var(--text-slate); 
-            font-weight: 600; 
-            font-size: 0.85rem;
-            transition: 0.3s;
-        }
-        .nav-links a:hover { color: var(--primary-blue); }
-
-        @media (max-width: 768px) {
-            .nav-links { display: none; }
-            .nav-inner { justify-content: center; }
-        }
-
-        /* --- Hero Section --- */
-        .hero-box {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            padding: 30px 20px;
-            text-align: center;
-        }
-
-        @media (min-width: 992px) {
-            .hero-box { 
-                display: grid;
-                grid-template-columns: 1fr 1fr; 
-                text-align: right; 
-                padding: 60px; 
-                align-items: stretch;
-            }
-        }
-
-        .hero-content h1 { font-size: 2rem; font-weight: 800; line-height: 1.3; margin-bottom: 15px; }
-        .hero-content span { color: var(--primary-blue); }
-        .hero-content p { font-size: 1rem; color: var(--text-slate); margin-bottom: 25px; max-width: 600px; margin-left: auto; margin-right: auto; }
-
-        .previews-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-        @media (min-width: 480px) { .previews-grid { grid-template-columns: 1fr 1fr; } }
-        @media (min-width: 992px) { .previews-grid { grid-template-columns: 1fr 1fr; } }
-
-        .bot-preview, .insta-preview {
-            padding: 30px 20px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: 0.3s;
-        }
-
-        .bot-preview { border: 1px solid rgba(59, 130, 246, 0.2); }
-        .insta-preview { border: 1px solid rgba(225, 48, 108, 0.2); }
-
-        .status-dot {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(34, 197, 94, 0.1);
-            color: #4ade80;
-            padding: 6px 14px;
-            border-radius: 50px;
-            font-size: 0.7rem;
-            margin-bottom: 15px;
-        }
-
-        .pulse {
-            width: 8px;
-            height: 8px;
-            background: #22c55e;
-            border-radius: 50%;
-            animation: pulse-ring 1.5s infinite;
-        }
-        @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 100% { box-shadow: 0 0 0 12px rgba(34, 197, 94, 0); } }
-
-        /* --- Services --- */
-        .services-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-
-        @media (min-width: 640px) { .services-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (min-width: 992px) { .services-grid { grid-template-columns: repeat(3, 1fr); } }
-
-        .service-card {
-            padding: 40px 20px;
-            text-align: center;
-            transition: transform 0.3s;
-        }
-        .service-card:hover { transform: translateY(-8px); background: var(--glass-bright); }
-        .service-icon { font-size: 2.8rem; margin-bottom: 15px; color: var(--primary-blue); }
-        .service-card h3 { font-size: 1.2rem; margin-bottom: 12px; }
-
-        /* --- Pricing Grid --- */
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 25px;
-        }
-
-        @media (min-width: 768px) { .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (min-width: 1100px) { .pricing-grid { grid-template-columns: repeat(3, 1fr); align-items: stretch; } }
-
-        .price-card { padding: 40px 25px; text-align: center; position: relative; display: flex; flex-direction: column; height: 100%; }
-        .price-card.popular { border: 2px solid var(--secondary-orange); box-shadow: 0 10px 30px rgba(249, 115, 22, 0.15); }
-        
-        @media (min-width: 1100px) { .price-card.popular { transform: scale(1.05); z-index: 2; } }
-
-        .price-amount { font-size: 2.2rem; font-weight: 800; margin: 15px 0; }
-        .price-amount span { font-size: 0.9rem; color: var(--text-slate); font-weight: 400; }
-        
-        .feature-list { list-style: none; margin: 20px 0; text-align: right; flex-grow: 1; }
-        .feature-list li { margin-bottom: 12px; color: var(--text-slate); font-size: 0.9rem; display: flex; align-items: flex-start; gap: 10px; }
-        .feature-list i { color: #22c55e; margin-top: 4px; }
-
-        /* --- Buttons --- */
-        .btn {
-            padding: 14px 28px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 700;
-            display: inline-block;
-            transition: all 0.3s;
-            border: none;
-            cursor: pointer;
-            text-align: center;
-            width: 100%;
-        }
-        .btn-primary { background: var(--primary-blue); color: white; }
-        .btn-orange { background: var(--secondary-orange); color: white; }
-        .btn-insta { background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); color: white; }
-        .btn-outline { border: 1px solid var(--glass-border); color: white; background: transparent; }
-        .btn:hover { transform: scale(1.03); filter: brightness(1.2); }
-
-        /* --- FAQ --- */
-        .faq-grid { max-width: 800px; margin: 0 auto; }
-        .faq-item { margin-bottom: 15px; padding: 20px; cursor: pointer; border-radius: 15px; transition: 0.3s; }
-        .faq-item:hover { background: var(--glass-bright); }
-        .faq-question { font-weight: 700; display: flex; justify-content: space-between; align-items: center; font-size: 1rem; color: var(--text-white); }
-        .faq-answer { margin-top: 15px; color: var(--text-slate); font-size: 0.9rem; display: none; border-top: 1px solid var(--glass-border); padding-top: 15px; line-height: 1.8; }
-
-        /* --- Footer --- */
-        footer { padding: 60px 0 120px; border-top: 1px solid var(--glass-border); margin-top: 40px; }
-        .footer-grid { display: grid; grid-template-columns: 1fr; gap: 40px; text-align: center; }
-        @media (min-width: 768px) { .footer-grid { grid-template-columns: 1.5fr 1fr; text-align: right; } }
-
-        .pay-badge {
-            padding: 6px 15px;
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        /* --- Floating Bar --- */
-        .floating-bar {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 95%;
-            max-width: 650px;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1001;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .bar-actions { display: flex; gap: 10px; align-items: center; }
-
-        @media (max-width: 600px) {
-            .floating-bar { padding: 8px 12px; }
-            .floating-bar .offer-text { display: none; }
-            .bar-actions { width: 100%; justify-content: space-around; }
-            .bar-actions .btn { padding: 8px 12px; font-size: 0.7rem; }
-        }
-
-    </style>
+    <!-- SEO & Meta Tags -->
+    <meta name="description"
+        content="منصة الطالب العراقي الأولى للتقارير والبحوث الأكاديمية. تصميم غلاف تقرير فوري وبحوث متكاملة.">
+    <meta property="og:title" content="مركز النجاح | Al-Najah Hub">
+    <meta property="og:description" content="منصة الطالب العراقي الأولى للتقارير والبحوث وتصميم الأغلفة.">
+    <meta property="og:type" content="website">
 </head>
+
 <body>
+
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="loader-content">
+            <i class="fas fa-layer-group pulse-icon"></i>
+            <h2>مركز النجاح</h2>
+        </div>
+    </div>
 
     <div class="bg-blobs">
         <div class="blob blob-1"></div>
@@ -330,6 +42,7 @@
         <!-- Navigation -->
         <nav>
             <div class="glass nav-inner">
+                <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
                 <a href="#" class="nav-logo">
                     <i class="fas fa-layer-group" style="color: var(--primary-blue);"></i>
                     مركز النجاح
@@ -340,8 +53,12 @@
                     <li><a href="#faq">الأسئلة المكررة</a></li>
                 </ul>
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <a href="https://instagram.com/al_najah_hub" target="_blank" style="color: var(--insta-pink); font-size: 1.2rem;"><i class="fab fa-instagram"></i></a>
-                    <a href="https://t.me/InstantReportsBot" class="btn btn-primary" style="padding: 8px 20px; width: auto; font-size: 0.8rem;">تواصل معنا</a>
+                    <a href="https://t.me/INBChannel" target="_blank" style="color: #0088cc; font-size: 1.2rem;"><i
+                            class="fab fa-telegram"></i></a>
+                    <a href="https://instagram.com/al_najah_hub" target="_blank"
+                        style="color: var(--insta-pink); font-size: 1.2rem;"><i class="fab fa-instagram"></i></a>
+                    <a href="https://t.me/InstantReportsBot" class="btn btn-primary"
+                        style="padding: 8px 20px; width: auto; font-size: 0.8rem;">تواصل معنا</a>
                 </div>
             </div>
         </nav>
@@ -350,37 +67,53 @@
         <section id="home">
             <div class="glass hero-box">
                 <div class="hero-content">
-                    <h1>منصة الطالب العراقي <span>الأولى</span> للتقارير والبحوث</h1>
-                    <p>احصل على تقاريرك وبحوثك الأكاديمية، وصمم غلاف تقريرك فوراً وبأعلى جودة ممكنة عبر نظامنا الذكي.</p>
+                    <h1>
+                        <a href="https://t.me/INBChannel" target="_blank"
+                            style="text-decoration: none; color: var(--text-white);">
+                            <span id="typewriter-text"
+                                data-text="منصة الطالب العراقي الأولى للتقارير والبحوث"></span><span
+                                class="typewriter-cursor">&nbsp;</span>
+                        </a>
+                    </h1>
+                    <p>احصل على تقاريرك وبحوثك الأكاديمية، وصمم غلاف تقريرك فوراً وبأعلى جودة ممكنة عبر نظامنا الذكي.
+                    </p>
                     <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                         <a href="#pricing" class="btn btn-primary" style="width: auto;">باقات التقارير الجديدة</a>
                         <a href="#faq" class="btn btn-outline" style="width: auto;">كيفية التسليم والدفع</a>
                     </div>
                 </div>
-                
-                <div class="previews-grid">
-                    <!-- Telegram Bot -->
-                    <div class="glass bot-preview">
-                        <div class="status-dot">
-                            <div class="pulse"></div>
-                            بوت الغلاف متصل
-                        </div>
-                        <i class="fab fa-telegram" style="font-size: 2.5rem; color: #0088cc; margin-bottom: 10px;"></i>
-                        <h2 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 5px;">@InstantReportsBot</h2>
-                        <p style="color: var(--text-slate); font-size: 0.75rem; margin-bottom: 15px; text-align: center;">تصميم غلاف التقرير فوراً</p>
-                        <a href="https://t.me/InstantReportsBot" class="btn btn-orange" style="font-size: 0.8rem; padding: 10px;">ابدأ التصميم</a>
-                    </div>
 
+                <div class="previews-grid">
                     <!-- Instagram Page -->
                     <div class="glass insta-preview">
                         <div class="status-dot" style="background: rgba(225, 48, 108, 0.1); color: var(--insta-pink);">
                             <i class="fas fa-star"></i>
                             تفاعل مستمر
                         </div>
-                        <i class="fab fa-instagram" style="font-size: 2.5rem; color: var(--insta-pink); margin-bottom: 10px;"></i>
+                        <i class="fab fa-instagram"
+                            style="font-size: 2.5rem; color: var(--insta-pink); margin-bottom: 10px;"></i>
                         <h2 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 5px;">al_najah_hub</h2>
-                        <p style="color: var(--text-slate); font-size: 0.75rem; margin-bottom: 15px; text-align: center;">تابع آخر العروض والخدمات</p>
-                        <a href="https://instagram.com/al_najah_hub" class="btn btn-insta" style="font-size: 0.8rem; padding: 10px;">فتح الانستقرام</a>
+                        <p
+                            style="color: var(--text-slate); font-size: 0.75rem; margin-bottom: 15px; text-align: center;">
+                            تابع آخر العروض والخدمات</p>
+                        <a href="https://instagram.com/al_najah_hub" class="btn btn-insta"
+                            style="font-size: 0.8rem; padding: 10px;">فتح الانستقرام</a>
+                    </div>
+
+                    <!-- Telegram Channel -->
+                    <div class="glass channel-preview">
+                        <div class="status-dot" style="background: rgba(6, 182, 212, 0.1); color: var(--accent-cyan);">
+                            <i class="fas fa-bullhorn"></i>
+                            أخبار وتحديثات
+                        </div>
+                        <i class="fab fa-telegram-plane"
+                            style="font-size: 2.5rem; color: var(--accent-cyan); margin-bottom: 10px;"></i>
+                        <h2 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 5px;">قناة النجاح</h2>
+                        <p
+                            style="color: var(--text-slate); font-size: 0.75rem; margin-bottom: 15px; text-align: center;">
+                            كن أول من يعرف بالعروض</p>
+                        <a href="https://t.me/INBChannel" class="btn btn-primary"
+                            style="font-size: 0.8rem; padding: 10px; background: var(--accent-cyan);">انضم للقناة</a>
                     </div>
                 </div>
             </div>
@@ -411,7 +144,90 @@
             </div>
         </section>
 
+        <!-- University Badges (Partners) Section -->
+        <section id="partners" class="reveal">
+            <div class="partners-header">
+                <h3>طلابنا من مختلف الجامعات العراقية</h3>
+            </div>
+            <div class="partners-grid">
+                <div class="partner-logo">
+                    <img src="images/uni_baghdad.png" alt="University of Baghdad">
+                    <span>جامعة بغداد</span>
+                </div>
+                <div class="partner-logo">
+                    <img src="images/uni_mustansiriyah.png" alt="Al-Mustansiriya University">
+                    <span>جامعة المستنصرية</span>
+                </div>
+                <div class="partner-logo">
+                    <img src="images/uni_tech.png" alt="University of Technology">
+                    <span>الجامعة التكنولوجية</span>
+                </div>
+                <div class="partner-logo">
+                    <img src="images/uni_basra.png" alt="University of Basrah">
+                    <span>جامعة البصرة</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section (New) -->
+        <section id="testimonials" class="reveal">
+            <div class="section-header">
+                <h2>آراء الطلاب</h2>
+                <p>ماذا يقول عملاؤنا عن خدماتنا</p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="glass testimonial-card">
+                    <i class="fas fa-quote-right"></i>
+                    <p style="color: var(--text-slate);">"شغل مرتب وتنسيق احترافي، وفرتوا علي وقت وجهد كبير. شكراً لكم!"
+                    </p>
+                    <div class="testimonial-author">
+                        طالب جامعي
+                        <div class="testimonial-role">كلية الهندسة</div>
+                    </div>
+                </div>
+                <div class="glass testimonial-card">
+                    <i class="fas fa-quote-right"></i>
+                    <p style="color: var(--text-slate);">"بوت الغلاف يجنن، بثواني سويت أحلى واجهة لتقريري بدون تعب."</p>
+                    <div class="testimonial-author">
+                        طالبة جامعية
+                        <div class="testimonial-role">كلية العلوم</div>
+                    </div>
+                </div>
+                <div class="glass testimonial-card">
+                    <i class="fas fa-quote-right"></i>
+                    <p style="color: var(--text-slate);">"التعامل راقي والتسليم بموعده، بصراحة أفضل خدمة جربتها."</p>
+                    <div class="testimonial-author">
+                        طالب دراسات
+                        <div class="testimonial-role">كلية القانون</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Pricing Section -->
+        <section id="portfolio" class="reveal">
+            <div class="section-header">
+                <h2>أعمالنا الأكاديمية</h2>
+                <p>نماذج من الأغلفة المعتمدة في الجامعات العراقية</p>
+            </div>
+            <div class="portfolio-slider">
+                <div class="portfolio-track">
+                    <div class="portfolio-item">
+                        <img src="images/cover1.png" alt="تقرير جامعي رسمي">
+                        <div class="portfolio-overlay">
+                            <span>واجهة جامعة بغداد</span>
+                        </div>
+                    </div>
+                    <div class="portfolio-item">
+                        <img src="images/cover3.png" alt="عرض تقديمي">
+                        <div class="portfolio-overlay">
+                            <span>عرض تقديمي (PPT)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="pricing">
             <div class="section-header">
                 <h2>باقات التقارير</h2>
@@ -434,7 +250,9 @@
 
                 <!-- Best Offer (Center) -->
                 <div class="glass price-card popular">
-                    <div style="background: var(--secondary-orange); color: white; padding: 4px 15px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; margin-bottom: 12px; display: inline-block;">أقوى عرض توفيري</div>
+                    <div
+                        style="background: var(--secondary-orange); color: white; padding: 4px 15px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; margin-bottom: 12px; display: inline-block;">
+                        أقوى عرض توفيري</div>
                     <h4>عرض التقريرين</h4>
                     <p style="color: var(--text-slate); font-size: 0.85rem;">تقريرين (بدون مصادر)</p>
                     <div class="price-amount">5,000 <span>د.ع</span></div>
@@ -458,7 +276,8 @@
                         <li><i class="fas fa-check-circle"></i> واجهة مرتبة واحترافية</li>
                         <li><i class="fas fa-check-circle"></i> أولوية قصوى في التسليم</li>
                     </ul>
-                    <a href="https://instagram.com/al_najah_hub" class="btn btn-outline" style="border-color: var(--gold); color: var(--gold);">طلب باقة VIP</a>
+                    <a href="https://instagram.com/al_najah_hub" class="btn btn-outline"
+                        style="border-color: var(--gold); color: var(--gold);">طلب باقة VIP</a>
                 </div>
             </div>
         </section>
@@ -486,7 +305,8 @@
                     <div class="faq-question">ما هي آلية تسليم الملفات وضمان الحقوق؟ <i class="fas fa-plus"></i></div>
                     <div class="faq-answer">
                         نعتمد آلية شفافة تضمن حق الطالب وحق المركز:
-                        <br>1. بعد إكمال التقرير، نرسل لك <b>نسخة كاملة من الملف تحتوي على علامة مائية (Watermark)</b> لتتمكن من مراجعة المحتوى والتأكد منه.
+                        <br>1. بعد إكمال التقرير، نرسل لك <b>نسخة كاملة من الملف تحتوي على علامة مائية (Watermark)</b>
+                        لتتمكن من مراجعة المحتوى والتأكد منه.
                         <br>2. بعد تأكدك من جودة العمل، يتم إرسال مبلغ الباقة المختارة.
                         <br>3. فور استلام الدفع، يتم إرسال <b>الملف الأصلي والكامل بدون أي علامات مائية</b> بصيغتي PDF.
                     </div>
@@ -496,15 +316,37 @@
                 <div class="glass faq-item" onclick="toggleFaq(this)">
                     <div class="faq-question">ما الفرق بين البوت وخدمة كتابة التقارير؟ <i class="fas fa-plus"></i></div>
                     <div class="faq-answer">
-                        بوت التلجرام <b>@InstantReportsBot</b> مخصص لتصميم "غلاف" أو واجهة التقرير بشكل فوري ومجاني. 
-                        أما كتابة "محتوى" التقرير بالكامل والبحوث الأكاديمية فتتم عبر التواصل المباشر مع فريقنا لاختيار الباقة المناسبة.
+                        بوت التلجرام <b>@InstantReportsBot</b> مخصص لتصميم "غلاف" أو واجهة التقرير بشكل فوري ومجاني.
+                        أما كتابة "محتوى" التقرير بالكامل والبحوث الأكاديمية فتتم عبر التواصل المباشر مع فريقنا لاختيار
+                        الباقة المناسبة.
                     </div>
                 </div>
 
                 <!-- Edits -->
                 <div class="glass faq-item" onclick="toggleFaq(this)">
-                    <div class="faq-question">هل يمكنني طلب تعديل بعد استلام الملف النهائي؟ <i class="fas fa-plus"></i></div>
-                    <div class="faq-answer">نعم بالتأكيد، رضاكم هو أولويتنا. نوفر خدمة التعديلات المجانية في حال وجود أي ملاحظة فنية أو نقص في المعلومات المطلوبة مسبقاً.</div>
+                    <div class="faq-question">هل يمكنني طلب تعديل بعد استلام الملف النهائي؟ <i class="fas fa-plus"></i>
+                    </div>
+                    <div class="faq-answer">نعم بالتأكيد، رضاكم هو أولويتنا. نوفر خدمة التعديلات المجانية في حال وجود أي
+                        ملاحظة فنية أو نقص في المعلومات المطلوبة مسبقاً.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Privacy Guarantee Section -->
+        <section id="privacy" class="reveal">
+            <div class="glass"
+                style="text-align: center; border: 1px solid rgba(46, 213, 115, 0.3); background: rgba(46, 213, 115, 0.05);">
+                <i class="fas fa-user-shield" style="font-size: 3rem; color: #2ed573; margin-bottom: 20px;"></i>
+                <h2 style="margin-bottom: 15px;">ضمان الخصوصية 100%</h2>
+                <p style="color: var(--text-slate); max-width: 600px; margin: 0 auto 20px;">
+                    نحن نتعهد بحماية بياناتك الأكاديمية والشخصية. يتم <strong>حذف جميع الملفات</strong> 
+                    تلقائياً
+                    بعد تسليم الطلب. لا نحتفظ بأي سجلات ولا نشارك عملك مع أي طرف ثالث.
+                </p>
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <span class="privacy-badge"><i class="fas fa-check-circle"></i> حذف تلقائي</span>
+                    <span class="privacy-badge"><i class="fas fa-check-circle"></i> تشفير تام</span>
+                    <span class="privacy-badge"><i class="fas fa-check-circle"></i> سرية مطلقة</span>
                 </div>
             </div>
         </section>
@@ -513,10 +355,15 @@
         <footer>
             <div class="footer-grid">
                 <div>
-                    <h3 style="margin-bottom: 15px; font-weight: 800; font-size: 1.6rem;">مركز النجاح (Al-Najah Hub)</h3>
-                    <p style="color: var(--text-slate); font-size: 0.95rem;">شريكك الأكاديمي الموثوق في العراق. نلتزم بتقديم أفضل جودة لمساعدتك في مسيرتك الدراسية.</p>
+                    <h3 style="margin-bottom: 15px; font-weight: 800; font-size: 1.6rem;">مركز النجاح (Al-Najah Hub)
+                    </h3>
+                    <p style="color: var(--text-slate); font-size: 0.95rem;">شريكك الأكاديمي الموثوق في العراق. نلتزم
+                        بتقديم أفضل جودة لمساعدتك في مسيرتك الدراسية.</p>
                     <div style="margin-top: 20px; display: flex; gap: 15px;">
-                        <a href="https://instagram.com/al_najah_hub" target="_blank" style="color: var(--insta-pink); font-size: 1.5rem;"><i class="fab fa-instagram"></i></a>
+                        <a href="https://t.me/INBChannel" target="_blank" style="color: #0088cc; font-size: 1.5rem;"><i
+                                class="fab fa-telegram"></i></a>
+                        <a href="https://instagram.com/al_najah_hub" target="_blank"
+                            style="color: var(--insta-pink); font-size: 1.5rem;"><i class="fab fa-instagram"></i></a>
                         <span style="color: var(--text-slate); font-weight: 700;">al_najah_hub</span>
                     </div>
                 </div>
@@ -524,13 +371,16 @@
                     <h4 style="margin-bottom: 15px; color: var(--text-white);">طرق الدفع والتعامل</h4>
                     <div class="payment-methods">
                         <span class="pay-badge" style="color: var(--zain); border-color: var(--zain);">زين كاش</span>
-                        <span class="pay-badge" style="color: var(--asiacell); border-color: var(--asiacell);">آسيا حوالة</span>
+                        <span class="pay-badge" style="color: var(--asiacell); border-color: var(--asiacell);">آسيا
+                            حوالة</span>
                         <span class="pay-badge" style="color: #ff5f00; border-color: #ff5f00;">ماستر كارد</span>
                     </div>
                 </div>
             </div>
-            <p style="margin-top: 50px; color: var(--text-slate); font-size: 0.8rem; text-align: center;">جميع الحقوق محفوظة لمركز النجاح © 2024</p>
+            <p style="margin-top: 50px; color: var(--text-slate); font-size: 0.8rem; text-align: center;">جميع الحقوق
+                محفوظة لمركز النجاح © <span id="year">2024</span></p>
         </footer>
+        <button id="scrollToTop" class="scroll-top-btn"><i class="fas fa-arrow-up"></i></button>
     </div>
 
     <!-- Floating Contact Bar -->
@@ -540,48 +390,24 @@
             <span style="font-size: 0.85rem; font-weight: 700;">ضمان الاستلام والدفع الآمن</span>
         </div>
         <div class="bar-actions">
-            <a href="https://instagram.com/al_najah_hub" class="btn btn-insta" style="padding: 10px 15px; width: auto; font-size: 0.8rem;">
-                <i class="fab fa-instagram"></i>
+            <a href="https://t.me/INBChannel" class="btn btn-primary"
+                style="padding: 10px 15px; width: auto; font-size: 0.8rem; background: #0088cc;">
+                <i class="fab fa-telegram"></i> القناة
             </a>
-            <a href="https://t.me/InstantReportsBot" class="btn btn-primary" style="padding: 10px 15px; width: auto; font-size: 0.8rem;">
-                اطلب تقريرك <i class="fab fa-telegram-plane"></i>
+            <a href="https://instagram.com/al_najah_hub" class="btn btn-insta"
+                style="padding: 10px 15px; width: auto; font-size: 0.8rem;">
+                <i class="fab fa-instagram"></i> الانستقرام
             </a>
+
         </div>
     </div>
 
-    <script>
-        function toggleFaq(element) {
-            const answer = element.querySelector('.faq-answer');
-            const icon = element.querySelector('.faq-question i');
-            const isOpen = answer.style.display === 'block';
-            
-            // Close all
-            document.querySelectorAll('.faq-answer').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.faq-question i').forEach(el => {
-                el.className = 'fas fa-plus';
-                el.style.transform = 'rotate(0deg)';
-            });
-            
-            // Open clicked
-            if (!isOpen) {
-                answer.style.display = 'block';
-                icon.className = 'fas fa-minus';
-                icon.style.transform = 'rotate(180deg)';
-            }
-        }
+    <!-- WhatsApp Floating Button -->
+    <a href="https://wa.me/9647700000000" target="_blank" class="whatsapp-btn">
+        <i class="fab fa-whatsapp"></i>
+    </a>
 
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
+
 </html>
