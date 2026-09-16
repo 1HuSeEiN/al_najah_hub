@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Love You - The Cinematic Universe Edition</title>
+  <style>
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background-color: #010002;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    #universe-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+    }
+    .start-btn {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 14px; letter-spacing: 0.35em;
+      text-transform: uppercase; color: #ffffff;
+      background: rgba(255, 20, 80, 0.15);
+      border: 1px solid rgba(255, 20, 80, 0.5);
+      padding: 15px 35px; border-radius: 40px;
+      cursor: pointer; z-index: 20;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 20px rgba(255, 20, 80, 0.2);
+    }
+    .start-btn:hover {
+      background: rgba(255, 20, 80, 0.3);
+      box-shadow: 0 0 35px rgba(255, 20, 80, 0.6);
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+    .flashbang {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #ffffff; opacity: 0;
+      pointer-events: none; z-index: 100;
+    }
+    .vignette {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: radial-gradient(circle, rgba(0,0,0,0) 50%, rgba(0,0,0,0.8) 100%);
+      pointer-events: none; z-index: 2;
+    }
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <div class="flashbang" id="flash"></div>
+  <div class="vignette"></div>
+  <div class="start-btn" id="startBtn">⚡ Ignite The Genesis ⚡</div>
+  <canvas id="universe-canvas"></canvas>
+
+  <script>
+
+    class AudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.isActive = false;
+        this.notes = [55, 55, 55, 48.99, 51.91];
+        this.step = 0;
+        this.audioEl = null;
+      }
+      init() {
+        if (this.isActive) return;
+        this.isActive = true;
+
+        try {
+          this.audioEl = new Audio(encodeURI('Angel (Remastered 2019).mp3'));
+          this.audioEl.loop = false;
+          const playPromise = this.audioEl.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((err) => {
+              console.warn('MP3 playback failed or blocked, falling back to synth bass:', err);
+              this.startSynth();
+            });
+          }
+        } catch (e) {
+          this.startSynth();
+        }
+      }
+      fadeAtEnd(time) {
+        if (this.audioEl && !this.audioEl.paused) {
+          if (time >= 57.0) {
+            const vol = Math.max(0, 1 - (time - 57.0) / 3.0);
+            this.audioEl.volume = vol;
+            if (time >= 60.0) {
+              this.audioEl.pause();
+            }
+          }
+        }
+      }
+      replay() {
+        this.isActive = true;
+        if (this.audioEl) {
+          this.audioEl.currentTime = 0;
+          this.audioEl.volume = 1.0;
+          this.audioEl.play().catch(() => {});
+        }
+      }
+      startSynth() {
+        if (this.ctx) return;
+        try {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+          setInterval(() => {
+            this.playSubBass(this.notes[this.step % this.notes.length], 0.45);
+            this.step++;
+          }, 550);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      playSubBass(freq, duration) {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const filter = this.ctx.createBiquadFilter();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(130, this.ctx.currentTime);
+
+        gain.gain.setValueAtTime(0.8, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+      }
+    }
+    const audio = new AudioEngine();
+
+    class TextureFactory {
+      static createText(text, fontSize, isGlow = false, color = '#ffffff') {
+        const c = document.createElement('canvas');
+        c.width = 1024; c.height = 256;
+        const ctx = c.getContext('2d');
+        ctx.clearRect(0, 0, 1024, 256);
+
+        if (isGlow) {
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 24;
+        }
+
+        ctx.font = `900 ${fontSize * 2}px "Segoe UI", Arial, sans-serif`;
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, 512, 128);
+
+        const tex = new THREE.CanvasTexture(c);
+        tex.minFilter = THREE.LinearMipmapLinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+        tex.generateMipmaps = true;
+        return tex;
+      }
+      static createCenterText(colorHex) {
+        const c = document.createElement('canvas');
+        c.width = 1024; c.height = 256;
+        const ctx = c.getContext('2d');
+        ctx.clearRect(0, 0, 1024, 256);
+
+        const neonHex = typeof colorHex === 'number'
+          ? '#' + colorHex.toString(16).padStart(6, '0')
+          : (colorHex || '#ff1040');
+
+        ctx.shadowColor = neonHex;
+        ctx.shadowBlur = 45;
+        ctx.font = 'bold 115px "Segoe UI", Arial, sans-serif';
+        ctx.fillStyle = neonHex;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Love You', 512, 128);
+
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('Love You', 512, 128);
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('Love You', 512, 128);
+
+        const tex = new THREE.CanvasTexture(c);
+        tex.minFilter = THREE.LinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+        return tex;
+      }
+      static createSoftParticle() {
+        const c = document.createElement('canvas');
+        c.width = 64; c.height = 64;
+        const ctx = c.getContext('2d');
+        const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+        grad.addColorStop(0, 'rgba(255,255,255,1)');
+        grad.addColorStop(0.3, 'rgba(255,255,255,0.6)');
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0,0,64,64);
+        return new THREE.CanvasTexture(c);
+      }
+    }
+
+    const PALETTES = [
+      { name: 'Vampire', core: 0xffffff, neon: 0xff1040, dark: 0x30000a },
+      { name: 'Cyber', core: 0xffffff, neon: 0xa810ff, dark: 0x1a0033 },
+      { name: 'Abyss', core: 0xffffff, neon: 0x00c3ff, dark: 0x001433 },
+      { name: 'Solar', core: 0xffffff, neon: 0xffaa00, dark: 0x401a00 }
+    ];
+    let activePalette = 0;
+
+    const canvasEl = document.getElementById('universe-canvas');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x010002, 0.0035);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 0, 85);
+
+    const renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    const starTex = TextureFactory.createSoftParticle();
+
+    const starGeo = new THREE.BufferGeometry();
+    const starCount = 1000;
+    const starPos = new Float32Array(starCount * 3);
+    for(let i=0; i<starCount; i++) {
+      starPos[i*3] = (Math.random() - 0.5) * 400;
+      starPos[i*3+1] = (Math.random() - 0.5) * 400;
+      starPos[i*3+2] = (Math.random() - 0.5) * 300 - 50;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    const starMat = new THREE.PointsMaterial({ size: 1.5, map: starTex, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
+    const starfield = new THREE.Points(starGeo, starMat);
+    scene.add(starfield);
+
+    const accretionVertexShader = `
+      attribute float aRadius;
+      attribute float aAngle;
+      attribute float aSpeed;
+      attribute float aHeight;
+      attribute float aSize;
+      attribute float aHeat;
+
+      uniform float uTime;
+      uniform float uSpeedMult;
+      uniform vec3 uColor;
+
+      varying vec3 vColor;
+      varying float vAlpha;
+
+      void main() {
+
+        float currentAngle = aAngle - uTime * (aSpeed * uSpeedMult / pow(aRadius, 1.25));
+
+        float x = cos(currentAngle) * aRadius;
+        float z = sin(currentAngle) * aRadius;
+        float y = aHeight * sin(currentAngle * 3.0 + aRadius * 0.4);
+
+        vec4 mvPosition = modelViewMatrix * vec4(x, y, z, 1.0);
+        gl_Position = projectionMatrix * mvPosition;
+
+        float doppler = 0.75 + 0.55 * sin(currentAngle);
+
+        vColor = mix(uColor, vec3(1.0, 1.0, 1.0), pow(aHeat, 1.8)) * doppler;
+        vAlpha = (0.35 + 0.65 * aHeat) * min(1.0, doppler);
+
+        gl_PointSize = aSize * (220.0 / -mvPosition.z);
+      }
+    `;
+
+    const accretionFragmentShader = `
+      varying vec3 vColor;
+      varying float vAlpha;
+
+      void main() {
+        vec2 coord = gl_PointCoord - vec2(0.5);
+        float dist = length(coord);
+        if (dist > 0.5) discard;
+        float glow = exp(-dist * 4.2);
+        gl_FragColor = vec4(vColor, vAlpha * glow);
+      }
+    `;
+
+    class BlackHole {
+      constructor() {
+        this.group = new THREE.Group();
+        this.group.position.set(0, 0, -35);
+        this.group.scale.set(0, 0, 0);
+        scene.add(this.group);
+
+        this.currentScale = 0;
+        this.targetScale = 0;
+        this.consumedCount = 0;
+
+        this.coreMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        this.core = new THREE.Mesh(new THREE.SphereGeometry(7.0, 64, 64), this.coreMat);
+        this.group.add(this.core);
+
+        this.particleCount = 26000;
+        const diskGeo = new THREE.BufferGeometry();
+
+        const dummyPos = new Float32Array(this.particleCount * 3);
+        const aRadius = new Float32Array(this.particleCount);
+        const aAngle = new Float32Array(this.particleCount);
+        const aSpeed = new Float32Array(this.particleCount);
+        const aHeight = new Float32Array(this.particleCount);
+        const aSize = new Float32Array(this.particleCount);
+        const aHeat = new Float32Array(this.particleCount);
+
+        for (let i = 0; i < this.particleCount; i++) {
+          let r, speed, height, size, heat;
+
+          if (i < 5000) {
+
+            r = 7.15 + Math.random() * 1.3;
+            speed = 48.0 + Math.random() * 22.0;
+            height = (Math.random() - 0.5) * 0.45;
+            size = Math.random() * 2.2 + 1.2;
+            heat = 0.95 + Math.random() * 0.05;
+          } else if (i < 21000) {
+
+            const normR = Math.pow(Math.random(), 1.6);
+            r = 8.4 + normR * 26.0;
+            speed = 36.0 + Math.random() * 12.0;
+            height = (Math.random() - 0.5) * (0.8 + normR * 2.6);
+            size = Math.random() * 2.0 + 0.8;
+            heat = Math.max(0.0, 1.0 - normR);
+          } else {
+
+            const normR = Math.random();
+            r = 13.0 + normR * 27.0;
+            speed = 24.0 + Math.random() * 14.0;
+            height = (Math.random() - 0.5) * (3.0 + normR * 6.5);
+            size = Math.random() * 3.0 + 1.4;
+            heat = (1.0 - normR) * 0.45;
+          }
+
+          aRadius[i] = r;
+          aAngle[i] = Math.random() * Math.PI * 2;
+          aSpeed[i] = speed;
+          aHeight[i] = height;
+          aSize[i] = size;
+          aHeat[i] = heat;
+        }
+
+        diskGeo.setAttribute('position', new THREE.BufferAttribute(dummyPos, 3));
+        diskGeo.setAttribute('aRadius', new THREE.BufferAttribute(aRadius, 1));
+        diskGeo.setAttribute('aAngle', new THREE.BufferAttribute(aAngle, 1));
+        diskGeo.setAttribute('aSpeed', new THREE.BufferAttribute(aSpeed, 1));
+        diskGeo.setAttribute('aHeight', new THREE.BufferAttribute(aHeight, 1));
+        diskGeo.setAttribute('aSize', new THREE.BufferAttribute(aSize, 1));
+        diskGeo.setAttribute('aHeat', new THREE.BufferAttribute(aHeat, 1));
+
+        this.uniforms = {
+          uTime: { value: 0.0 },
+          uSpeedMult: { value: 1.0 },
+          uColor: { value: new THREE.Color(PALETTES[activePalette].neon) }
+        };
+
+        this.diskMat = new THREE.ShaderMaterial({
+          uniforms: this.uniforms,
+          vertexShader: accretionVertexShader,
+          fragmentShader: accretionFragmentShader,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+
+        this.disk = new THREE.Points(diskGeo, this.diskMat);
+        this.disk.rotation.x = Math.PI / 2.35;
+        this.disk.rotation.y = -0.12;
+        this.group.add(this.disk);
+      }
+
+      update(delta, time, stage) {
+        if (stage === 1) {
+          this.group.visible = false;
+        } else if (stage === 2) {
+          this.group.visible = true;
+
+          this.uniforms.uTime.value = time;
+          this.uniforms.uSpeedMult.value = 1.0 + (this.currentScale - 0.8) * 0.4;
+
+          const advanceProgress = Math.min(1.0, Math.max(0, (time - 10.0) / 15.0));
+          this.group.position.z = THREE.MathUtils.lerp(-35, -8, advanceProgress);
+
+          const feedRatio = Math.min(1.0, this.consumedCount / 460);
+          this.targetScale = 0.8 + feedRatio * 2.4;
+          this.currentScale = THREE.MathUtils.lerp(this.currentScale, this.targetScale, delta * 3.0);
+          this.group.scale.setScalar(this.currentScale);
+
+          this.disk.rotation.z -= delta * 0.15;
+        } else if (stage === 3) {
+          this.group.visible = true;
+
+          this.uniforms.uTime.value = time;
+          this.uniforms.uSpeedMult.value = 3.5;
+
+          this.targetScale = 3.25;
+          this.currentScale = THREE.MathUtils.lerp(this.currentScale, this.targetScale, delta * 2.5);
+
+          const shake = (Math.random() - 0.5) * 0.7;
+          const shakeY = (Math.random() - 0.5) * 0.7;
+          this.group.position.x = shake;
+          this.group.position.y = shakeY;
+          this.group.position.z = -8;
+          this.group.scale.setScalar(this.currentScale * (1 + Math.sin(time * 50) * 0.05));
+          this.disk.rotation.z -= delta * 0.6;
+        } else if (stage >= 4) {
+
+          this.group.visible = false;
+          this.group.scale.set(0, 0, 0);
+        }
+      }
+
+      reset() {
+        this.group.visible = false;
+        this.group.position.set(0, 0, -35);
+        this.currentScale = 0.8;
+        this.targetScale = 0.8;
+        this.consumedCount = 0;
+        this.group.scale.set(0, 0, 0);
+        this.uniforms.uSpeedMult.value = 1.0;
+      }
+
+      updateColor(colorHex) {
+        this.uniforms.uColor.value.setHex(colorHex);
+      }
+    }
+    const blackHole = new BlackHole();
+
+    class SupernovaSystem {
+      constructor() {
+        this.group = new THREE.Group();
+        scene.add(this.group);
+
+        this.waves = [];
+        for(let i=0; i<4; i++) {
+          const wave = new THREE.Mesh(
+            new THREE.TorusGeometry(1, 0.15, 16, 120),
+            new THREE.MeshBasicMaterial({ color: PALETTES[activePalette].neon, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })
+          );
+          wave.rotation.x = Math.random() * Math.PI;
+          wave.rotation.y = Math.random() * Math.PI;
+          this.group.add(wave);
+          this.waves.push({ mesh: wave, active: false, speed: 0, scale: 1 });
+        }
+
+        this.novaSphere = new THREE.Mesh(
+          new THREE.SphereGeometry(1, 64, 64),
+          new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })
+        );
+        this.group.add(this.novaSphere);
+
+        this.debrisCount = 1200;
+        const debrisGeo = new THREE.BufferGeometry();
+        this.debrisPos = new Float32Array(this.debrisCount * 3);
+        this.debrisVel = new Float32Array(this.debrisCount * 3);
+        for(let i=0; i<this.debrisCount; i++) {
+          this.debrisPos[i*3] = 0;
+          this.debrisPos[i*3+1] = 0;
+          this.debrisPos[i*3+2] = -10;
+
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.acos(Math.random() * 2 - 1);
+          const spd = Math.random() * 140 + 70;
+          this.debrisVel[i*3] = Math.sin(phi) * Math.cos(theta) * 2.0 * spd;
+          this.debrisVel[i*3+1] = Math.sin(phi) * Math.sin(theta) * 1.5 * spd;
+          this.debrisVel[i*3+2] = Math.cos(phi) * spd;
+        }
+        debrisGeo.setAttribute('position', new THREE.BufferAttribute(this.debrisPos, 3));
+        this.debrisMat = new THREE.PointsMaterial({
+          size: 2.0,
+          map: starTex,
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+        this.debris = new THREE.Points(debrisGeo, this.debrisMat);
+        this.group.add(this.debris);
+        this.debrisActive = false;
+      }
+
+      trigger() {
+        this.waves.forEach((w, idx) => {
+          w.active = true;
+          w.scale = 1;
+          w.mesh.scale.set(1,1,1);
+          w.mesh.material.opacity = 1;
+          w.speed = 2.4 + idx * 1.4;
+        });
+
+        this.novaSphere.scale.set(1,1,1);
+        this.novaSphere.material.opacity = 1.0;
+
+        const posArr = this.debris.geometry.attributes.position.array;
+        for(let i=0; i<this.debrisCount; i++) {
+          posArr[i*3] = 0;
+          posArr[i*3+1] = 0;
+          posArr[i*3+2] = -10;
+        }
+        this.debris.geometry.attributes.position.needsUpdate = true;
+        this.debrisMat.opacity = 1.0;
+        this.debrisActive = true;
+      }
+
+      update(delta) {
+        this.waves.forEach(w => {
+          if (w.active) {
+            w.scale += w.speed * delta * 60;
+            w.mesh.scale.set(w.scale, w.scale, w.scale);
+            w.mesh.material.opacity *= Math.pow(0.93, delta * 60);
+            if (w.mesh.material.opacity < 0.01) w.active = false;
+          }
+        });
+
+        if (this.novaSphere.material.opacity > 0.01) {
+          this.novaSphere.scale.addScalar(delta * 180);
+          this.novaSphere.material.opacity *= Math.pow(0.85, delta * 60);
+        }
+
+        if (this.debrisActive) {
+          const posArr = this.debris.geometry.attributes.position.array;
+          for(let i=0; i<this.debrisCount; i++) {
+            posArr[i*3] += this.debrisVel[i*3] * delta;
+            posArr[i*3+1] += this.debrisVel[i*3+1] * delta;
+            posArr[i*3+2] += this.debrisVel[i*3+2] * delta;
+            this.debrisVel[i*3] *= Math.pow(0.965, delta * 60);
+            this.debrisVel[i*3+1] *= Math.pow(0.965, delta * 60);
+            this.debrisVel[i*3+2] *= Math.pow(0.965, delta * 60);
+          }
+          this.debris.geometry.attributes.position.needsUpdate = true;
+          this.debrisMat.opacity *= Math.pow(0.965, delta * 60);
+          if (this.debrisMat.opacity < 0.01) this.debrisActive = false;
+        }
+      }
+
+      reset() {
+        this.waves.forEach(w => {
+          w.active = false;
+          w.mesh.scale.set(1, 1, 1);
+          w.mesh.material.opacity = 0;
+        });
+        this.novaSphere.scale.set(1, 1, 1);
+        this.novaSphere.material.opacity = 0;
+        this.debrisActive = false;
+        this.debrisMat.opacity = 0;
+      }
+
+      updateColor(colorHex) {
+        this.waves.forEach(w => w.mesh.material.color.setHex(colorHex));
+        this.debrisMat.color.setHex(colorHex);
+      }
+    }
+    const supernova = new SupernovaSystem();
+
+    class HeartSystem {
+      constructor() {
+        this.particles = [];
+        this.group = new THREE.Group();
+        scene.add(this.group);
+
+        this.texWord = TextureFactory.createText('Love You', 80, false);
+        this.texCenter = TextureFactory.createCenterText(PALETTES[activePalette].neon);
+
+        this.neonMat = new THREE.SpriteMaterial({ map: this.texWord, color: PALETTES[activePalette].neon, transparent: true, blending: THREE.AdditiveBlending });
+        this.coreMat = new THREE.SpriteMaterial({ map: this.texWord, color: PALETTES[activePalette].core, transparent: true, blending: THREE.AdditiveBlending });
+
+        this.particleCount = 480;
+        const heartScale = 2.25;
+
+        for (let i = 0; i < this.particleCount; i++) {
+          const isEdge = i < this.particleCount * 0.6;
+          const fillRatio = isEdge ? 1.0 : Math.pow(Math.random(), 0.5) * 0.95;
+
+          const t = Math.random() * Math.PI * 2;
+          const x = 16 * Math.pow(Math.sin(t), 3);
+          const y = (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+
+          const zDepth = isEdge ? 0 : (Math.random() - 0.5) * 12 * (1 - fillRatio);
+          const targetPos = new THREE.Vector3(x * heartScale * fillRatio, y * heartScale * fillRatio, zDepth);
+
+          const isBright = Math.random() > 0.6;
+          const sprite = new THREE.Sprite(isBright ? this.coreMat.clone() : this.neonMat.clone());
+
+          sprite.position.set(
+            (Math.random() - 0.5) * 220,
+            (Math.random() - 0.5) * 140,
+            (Math.random() - 0.5) * 90
+          );
+
+          const s = isEdge ? (Math.random() * 0.5 + 1.05) : (Math.random() * 0.8 + 0.95);
+          sprite.scale.set(s * 8.5, s * 2.125, 1);
+
+          this.group.add(sprite);
+
+          let morphDelay;
+          if (isEdge) {
+            const normT = Math.abs((t % (Math.PI * 2)) - Math.PI) / Math.PI;
+            morphDelay = normT * 0.28 + (Math.random() * 0.05);
+          } else {
+            const normY = Math.max(0, Math.min(1.0, (y + 18) / 36));
+            morphDelay = 0.22 + normY * 0.24 + (Math.random() * 0.06);
+          }
+
+          this.particles.push({
+            mesh: sprite,
+            targetPos: targetPos,
+            vel: new THREE.Vector3((Math.random() - 0.5) * 0.6, (Math.random() - 0.5) * 0.6, (Math.random() - 0.5) * 0.6),
+            mass: Math.random() * 0.5 + 0.5,
+            orbitAxis: new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize(),
+            phase: Math.random() * Math.PI * 2,
+            isEdge: isEdge,
+            morphDelay: morphDelay,
+            consumed: false
+          });
+        }
+
+        this.centerGroup = new THREE.Group();
+
+        this.centerGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: this.texCenter,
+          color: 0xffffff,
+          transparent: true,
+          blending: THREE.AdditiveBlending
+        }));
+        this.centerGlow.position.set(0, 1.5, 0.4);
+        this.centerGlow.scale.set(46, 11.5, 1);
+        this.centerGlow.material.opacity = 0;
+        this.centerGroup.add(this.centerGlow);
+
+        this.centerCore = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: this.texCenter,
+          color: 0xffffff,
+          transparent: true,
+          blending: THREE.AdditiveBlending
+        }));
+        this.centerCore.position.set(0, 1.5, 0.5);
+        this.centerCore.scale.set(42, 10.5, 1);
+        this.centerCore.material.opacity = 0;
+        this.centerGroup.add(this.centerCore);
+
+        scene.add(this.centerGroup);
+      }
+
+      update(delta, time, stage, beat) {
+        const bhPos = blackHole.group.position;
+
+        for (let p of this.particles) {
+          if (stage === 1) {
+
+            p.mesh.position.add(p.vel);
+            p.mesh.position.x += Math.sin(time * 0.9 + p.phase) * 0.12;
+            p.mesh.position.y += Math.cos(time * 0.8 + p.phase) * 0.12;
+            p.mesh.position.z += Math.sin(time * 0.6 + p.phase) * 0.08;
+
+            if (p.mesh.position.y < -85) p.mesh.position.y = 85;
+            if (p.mesh.position.y > 85) p.mesh.position.y = -85;
+            if (p.mesh.position.x < -130) p.mesh.position.x = 130;
+            if (p.mesh.position.x > 130) p.mesh.position.x = -130;
+          }
+          else if (stage === 2 || stage === 3) {
+
+            if (!p.consumed) {
+              const dir = new THREE.Vector3().subVectors(bhPos, p.mesh.position);
+              const dist = dir.length();
+              dir.normalize();
+
+              const captureThreshold = Math.max(1.6, 2.8 * (blackHole.currentScale / 3.2));
+              if (dist < captureThreshold || (stage === 3 && dist < 15)) {
+
+                p.consumed = true;
+                p.mesh.position.copy(bhPos);
+                p.mesh.visible = false;
+                blackHole.consumedCount++;
+              } else {
+
+                const stageProgress = Math.min(1.0, Math.max(0, (time - 10.0) / 15.0));
+                const inwardSpeed = 22 + stageProgress * 50 + (1 / Math.max(dist, 1)) * 35;
+                const pull = dir.clone().multiplyScalar(inwardSpeed * delta * 60);
+
+                const tangent = new THREE.Vector3().crossVectors(dir, p.orbitAxis).normalize();
+                const orbitSpeed = 12 + stageProgress * 22;
+                const orbit = tangent.multiplyScalar(orbitSpeed * delta * 60);
+
+                p.vel.lerp(pull.add(orbit), delta * 6.5);
+                p.mesh.position.addScaledVector(p.vel, delta);
+
+                const stretch = Math.min(1.0, dist / 14);
+                p.mesh.scale.set(8.5 * (0.35 + 0.65 * stretch), 2.125 * Math.max(0.15, stretch), 1);
+              }
+            }
+          }
+          else if (stage === 4) {
+
+            p.mesh.visible = true;
+            p.mesh.position.addScaledVector(p.vel, delta);
+            p.vel.multiplyScalar(Math.pow(0.965, delta * 60));
+
+            p.mesh.material.rotation = (p.mesh.material.rotation || 0) + (p.rotSpeed || 0.05) * delta;
+
+            const targetScaleX = (p.isEdge ? 7.2 : 8.8);
+            p.mesh.scale.x = THREE.MathUtils.lerp(p.mesh.scale.x, targetScaleX, delta * 3);
+            p.mesh.scale.y = THREE.MathUtils.lerp(p.mesh.scale.y, targetScaleX / 4, delta * 3);
+          }
+          else if (stage === 5) {
+
+            p.mesh.visible = true;
+
+            const morphTime = Math.max(0, time - 37.0);
+            const totalMorphDuration = 17.0;
+            const globalProgress = Math.min(1.0, morphTime / totalMorphDuration);
+
+            const particleDelay = p.morphDelay || 0;
+            const glideWindow = 0.44;
+            const localProgress = Math.max(0, Math.min(1.0, (globalProgress - particleDelay) / glideWindow));
+
+            const easeQuintic = Math.pow(localProgress, 3) * (localProgress * (6 * localProgress - 15) + 10);
+
+            if (p.mesh.material.rotation) {
+              p.mesh.material.rotation = THREE.MathUtils.lerp(p.mesh.material.rotation, 0, delta * 1.5);
+            }
+
+            const heartBeatStrength = Math.max(0, (globalProgress - 0.75) / 0.25);
+            const currentBeat = 1.0 + (beat - 1.0) * heartBeatStrength;
+            const pulse = 1.0 + Math.sin(time * 2.0 + p.phase) * (0.01 + 0.025 * heartBeatStrength);
+
+            const targetX = p.targetPos.x * currentBeat * pulse;
+            const targetY = p.targetPos.y * currentBeat * pulse;
+            const targetZ = p.targetPos.z * pulse;
+            const currentTarget = new THREE.Vector3(targetX, targetY, targetZ);
+
+            const displacement = new THREE.Vector3().subVectors(currentTarget, p.mesh.position);
+
+            const springStrength = 0.0006 + easeQuintic * 0.015;
+            const springForce = displacement.multiplyScalar(springStrength / p.mass);
+            p.vel.add(springForce);
+
+            const dampingFactor = 0.965 - easeQuintic * 0.09;
+            p.vel.multiplyScalar(Math.pow(dampingFactor, delta * 60));
+            p.mesh.position.addScaledVector(p.vel, delta * 60);
+
+            const targetScaleX = (p.isEdge ? 8.8 : 10.8);
+            p.mesh.scale.x = THREE.MathUtils.lerp(p.mesh.scale.x, targetScaleX, delta * 2.0);
+            p.mesh.scale.y = THREE.MathUtils.lerp(p.mesh.scale.y, targetScaleX / 4, delta * 2.0);
+          }
+        }
+
+        if (stage === 5) {
+          const centerProgress = Math.min(1.0, Math.max(0, (time - 40.5) / 5.5));
+          const heartFormedFactor = Math.pow(centerProgress, 1.4);
+
+          this.centerGlow.material.opacity = THREE.MathUtils.lerp(this.centerGlow.material.opacity, heartFormedFactor * 0.85, delta * 3.0);
+          this.centerGlow.scale.set(48 * beat, 12 * beat, 1);
+
+          this.centerCore.material.opacity = THREE.MathUtils.lerp(this.centerCore.material.opacity, heartFormedFactor * 0.98, delta * 3.0);
+          this.centerCore.scale.set(44 * beat, 11 * beat, 1);
+        }
+      }
+
+      triggerSupernovaBlast() {
+        const bhPos = blackHole.group.position;
+        for (let p of this.particles) {
+          p.consumed = false;
+          p.mesh.visible = true;
+          p.mesh.position.set(
+            bhPos.x + (Math.random() - 0.5) * 2,
+            bhPos.y + (Math.random() - 0.5) * 2,
+            bhPos.z + (Math.random() - 0.5) * 2
+          );
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.acos(Math.random() * 2 - 1);
+          const speed = Math.random() * 105 + 55;
+          p.vel.set(
+            Math.sin(phi) * Math.cos(theta) * 2.0,
+            Math.sin(phi) * Math.sin(theta) * 1.5,
+            Math.cos(phi) * 1.1
+          ).multiplyScalar(speed);
+          p.rotSpeed = (Math.random() - 0.5) * 4.0;
+        }
+      }
+
+      manualDetonation() {
+        for (let p of this.particles) {
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.acos(Math.random() * 2 - 1);
+          const speed = Math.random() * 55 + 25;
+          p.vel.add(new THREE.Vector3(
+            Math.sin(phi) * Math.cos(theta) * 1.8,
+            Math.sin(phi) * Math.sin(theta) * 1.4,
+            Math.cos(phi)
+          ).multiplyScalar(speed));
+          p.rotSpeed = (Math.random() - 0.5) * 4.0;
+        }
+      }
+
+      reset() {
+        for (let p of this.particles) {
+          p.mesh.position.set(
+            (Math.random() - 0.5) * 200,
+            (Math.random() - 0.5) * 140,
+            (Math.random() - 0.5) * 100 - 15
+          );
+          p.vel.set((Math.random() - 0.5) * 0.35, (Math.random() - 0.5) * 0.35, (Math.random() - 0.5) * 0.2);
+          p.consumed = false;
+          p.mesh.visible = true;
+          p.mesh.scale.set(8.5, 2.125, 1);
+          if (p.mesh.material.rotation) p.mesh.material.rotation = 0;
+        }
+        this.centerGlow.material.opacity = 0;
+        this.centerCore.material.opacity = 0;
+      }
+
+      updateColor(colorHex) {
+        this.particles.forEach(p => {
+          if(!p.mesh.material.color.equals(new THREE.Color(0xffffff))) {
+            p.mesh.material.color.setHex(colorHex);
+          }
+        });
+        this.texCenter = TextureFactory.createCenterText(colorHex);
+        this.centerGlow.material.map = this.texCenter;
+        this.centerGlow.material.needsUpdate = true;
+        this.centerCore.material.map = this.texCenter;
+        this.centerCore.material.needsUpdate = true;
+      }
+    }
+    const heartSystem = new HeartSystem();
+
+    class PostRainSystem {
+      constructor() {
+        this.rainParticles = [];
+        this.group = new THREE.Group();
+        this.group.visible = false;
+        scene.add(this.group);
+
+        const rainMat = new THREE.SpriteMaterial({
+          map: TextureFactory.createText('Love You', 40, false),
+          color: PALETTES[activePalette].neon,
+          transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending
+        });
+
+        for(let i=0; i<150; i++) {
+          const sprite = new THREE.Sprite(rainMat.clone());
+          sprite.position.set((Math.random() - 0.5) * 300, (Math.random() - 0.5) * 200, (Math.random() - 0.5) * 150 - 50);
+          const s = Math.random() * 0.8 + 0.5;
+          sprite.scale.set(s * 5.5, s * 1.375, 1);
+          this.group.add(sprite);
+          this.rainParticles.push({
+            mesh: sprite,
+            vy: -(Math.random() * 0.6 + 0.3)
+          });
+        }
+      }
+      update(stage) {
+        if (stage >= 5 && time > 52.0) {
+          this.group.visible = true;
+          for(let r of this.rainParticles) {
+            r.mesh.position.y += r.vy;
+            if (r.mesh.position.y < -100) {
+              r.mesh.position.y = 120;
+              r.mesh.position.x = (Math.random() - 0.5) * 300;
+            }
+          }
+        }
+      }
+      reset() {
+        this.group.visible = false;
+        for(let r of this.rainParticles) {
+          r.mesh.position.set((Math.random() - 0.5) * 300, (Math.random() - 0.5) * 200, (Math.random() - 0.5) * 150 - 50);
+        }
+      }
+      updateColor(colorHex) {
+        this.rainParticles.forEach(r => r.mesh.material.color.setHex(colorHex));
+      }
+    }
+    const postRain = new PostRainSystem();
+
+    let time = 0;
+    let stage = 0;
+
+    const startBtn = document.getElementById('startBtn');
+    const flash = document.getElementById('flash');
+
+    startBtn.addEventListener('click', () => {
+      startBtn.style.opacity = '0';
+      startBtn.style.transform = 'translate(-50%, -50%) scale(1.5)';
+      setTimeout(() => startBtn.remove(), 600);
+
+      audio.init();
+      stage = 1;
+    });
+
+    function triggerSupernovaSequence() {
+      stage = 4;
+
+      flash.style.opacity = '1';
+      flash.style.transition = 'none';
+      setTimeout(() => { flash.style.transition = 'opacity 2s ease-out'; flash.style.opacity = '0'; }, 50);
+
+      supernova.trigger();
+      heartSystem.triggerSupernovaBlast();
+    }
+
+    function replayExperience() {
+      time = 0;
+      stage = 1;
+      blackHole.reset();
+      supernova.reset();
+      heartSystem.reset();
+      postRain.reset();
+      audio.replay();
+    }
+
+    window.addEventListener('pointerdown', (e) => {
+      if (e.target === startBtn) return;
+      if (stage === 5 && time > 52.0) {
+        flash.style.opacity = '0.4'; flash.style.transition = 'none';
+        setTimeout(() => { flash.style.transition = 'opacity 0.8s ease-out'; flash.style.opacity = '0'; }, 30);
+        supernova.trigger();
+        heartSystem.manualDetonation();
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        activePalette = (activePalette + 1) % PALETTES.length;
+        const cHex = PALETTES[activePalette].neon;
+
+        blackHole.updateColor(cHex);
+        supernova.updateColor(cHex);
+        heartSystem.updateColor(cHex);
+        postRain.updateColor(cHex);
+      } else if (e.code === 'KeyR') {
+        replayExperience();
+      }
+    });
+
+    let mouseX = 0, mouseY = 0;
+    window.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (stage === 0) { renderer.render(scene, camera); return; }
+
+      const delta = clock.getDelta();
+      time += delta;
+
+      audio.fadeAtEnd(time);
+
+      if (stage === 1 && time >= 10.0) {
+        stage = 2;
+      }
+      if (stage === 2 && (time >= 26.0 || blackHole.consumedCount >= 460)) {
+        stage = 3;
+      }
+      if (stage === 3 && time >= 32.0) {
+        triggerSupernovaSequence();
+      }
+      if (stage === 4 && time >= 37.0) {
+        stage = 5;
+      }
+
+      const beat = 1.0 + Math.pow(Math.max(0, Math.sin(time * 3.4)), 6) * 0.12;
+
+      if (stage < 3) {
+        camera.position.x = THREE.MathUtils.lerp(camera.position.x, mouseX * 12, delta * 1.5);
+        camera.position.y = THREE.MathUtils.lerp(camera.position.y, mouseY * 12, delta * 1.5);
+        camera.position.z = THREE.MathUtils.lerp(camera.position.z, 85, delta * 1.5);
+        camera.lookAt(0, 0, 0);
+      } else if (stage === 3) {
+        camera.position.x = THREE.MathUtils.lerp(camera.position.x, mouseX * 15, delta * 1.5);
+        camera.position.y = THREE.MathUtils.lerp(camera.position.y, mouseY * 15, delta * 1.5);
+        camera.position.z = THREE.MathUtils.lerp(camera.position.z, 96, delta * 1.5);
+        camera.lookAt(0, 0, 0);
+      } else if (stage === 4) {
+        const blastShake = Math.max(0, 1 - (time - 32.0) / 5.0) * 1.4;
+        camera.position.x += (Math.random() - 0.5) * blastShake;
+        camera.position.y += (Math.random() - 0.5) * blastShake;
+        camera.lookAt(0, 0, 0);
+      } else {
+        const panX = Math.sin(time * 0.15) * 20 + (mouseX * 15);
+        const panY = Math.sin(time * 0.25) * 8 + (mouseY * 15);
+        camera.position.x = THREE.MathUtils.lerp(camera.position.x, panX, delta * 1.5);
+        camera.position.y = THREE.MathUtils.lerp(camera.position.y, panY, delta * 1.5);
+        camera.position.z = THREE.MathUtils.lerp(camera.position.z, 85, delta * 1.5);
+        camera.lookAt(0, 0, 0);
+      }
+
+      starfield.rotation.y = time * 0.02;
+
+      blackHole.update(delta, time, stage);
+      heartSystem.update(delta, time, stage, beat);
+      supernova.update(delta);
+      postRain.update(stage);
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
