@@ -1,1031 +1,639 @@
 <!DOCTYPE html>
-<html lang="en">
+
+<html dir="rtl" lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Love You - The Cinematic Universe Edition</title>
-  <style>
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background-color: #010002;
-      overflow: hidden;
-      height: 100vh;
-      width: 100vw;
-      user-select: none;
-      font-family: 'Segoe UI', Arial, sans-serif;
-    }
-    #universe-canvas {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: 1;
-    }
-    .start-btn {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 14px; letter-spacing: 0.35em;
-      text-transform: uppercase; color: #ffffff;
-      background: rgba(255, 20, 80, 0.15);
-      border: 1px solid rgba(255, 20, 80, 0.5);
-      padding: 15px 35px; border-radius: 40px;
-      cursor: pointer; z-index: 20;
-      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: blur(8px);
-      box-shadow: 0 0 20px rgba(255, 20, 80, 0.2);
-    }
-    .start-btn:hover {
-      background: rgba(255, 20, 80, 0.3);
-      box-shadow: 0 0 35px rgba(255, 20, 80, 0.6);
-      transform: translate(-50%, -50%) scale(1.05);
-    }
-    .flashbang {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: #ffffff; opacity: 0;
-      pointer-events: none; z-index: 100;
-    }
-    .vignette {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: radial-gradient(circle, rgba(0,0,0,0) 50%, rgba(0,0,0,0.8) 100%);
-      pointer-events: none; z-index: 2;
-    }
-  </style>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title data-lang-ar="مركز النجاح | برمجة وحلول تقنية &amp; بحوث وتقارير جامعية" data-lang-en="Al-Najah Hub | Tech Solutions &amp; Academic Reports">مركز النجاح | برمجة وحلول تقنية &amp; بحوث وتقارير جامعية</title>
+<!-- Google Fonts: Cairo & Fira Code -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&amp;family=Fira+Code:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Font Awesome 6 -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<!-- Custom CSS -->
+<link href="style.css" rel="stylesheet"/>
+<!-- SEO & Meta Tags -->
+<meta content="مركز النجاح للبرمجة والحلول التقنية وتطوير المواقع، مع سورس كود كامل قابل للتحميل المباشر، وخدمات إعداد البحوث والتقارير الجامعية وتصميم الأغلفة. الطلب حصراً عبر الانستقرام." name="description"/>
+<meta content="برمجة, تطوير مواقع, سورس كود كامل, بحوث جامعية, تقارير جامعية, العراق, زين كاش, انستقرام" name="keywords"/>
+<meta content="مركز النجاح | برمجة وحلول تقنية &amp; بحوث وتقارير جامعية" property="og:title"/>
+<meta content="مواقع ويب، سورس كود تفاعلي للتحميل، تقارير وبحوث جامعية رصينة. الطلب عبر الانستقرام." property="og:description"/>
+<meta content="website" property="og:type"/>
 </head>
 <body>
-  <div class="flashbang" id="flash"></div>
-  <div class="vignette"></div>
-  <div class="start-btn" id="startBtn">⚡ Ignite The Genesis ⚡</div>
-  <canvas id="universe-canvas"></canvas>
-
-  <script>
-
-    class AudioEngine {
-      constructor() {
-        this.ctx = null;
-        this.isActive = false;
-        this.notes = [55, 55, 55, 48.99, 51.91];
-        this.step = 0;
-        this.audioEl = null;
-      }
-      init() {
-        if (this.isActive) return;
-        this.isActive = true;
-
-        try {
-          this.audioEl = new Audio(encodeURI('Angel (Remastered 2019).mp3'));
-          this.audioEl.loop = false;
-          const playPromise = this.audioEl.play();
-          if (playPromise !== undefined) {
-            playPromise.catch((err) => {
-              console.warn('MP3 playback failed or blocked, falling back to synth bass:', err);
-              this.startSynth();
-            });
-          }
-        } catch (e) {
-          this.startSynth();
-        }
-      }
-      fadeAtEnd(time) {
-        if (this.audioEl && !this.audioEl.paused) {
-          if (time >= 57.0) {
-            const vol = Math.max(0, 1 - (time - 57.0) / 3.0);
-            this.audioEl.volume = vol;
-            if (time >= 60.0) {
-              this.audioEl.pause();
-            }
-          }
-        }
-      }
-      replay() {
-        this.isActive = true;
-        if (this.audioEl) {
-          this.audioEl.currentTime = 0;
-          this.audioEl.volume = 1.0;
-          this.audioEl.play().catch(() => {});
-        }
-      }
-      startSynth() {
-        if (this.ctx) return;
-        try {
-          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-          setInterval(() => {
-            this.playSubBass(this.notes[this.step % this.notes.length], 0.45);
-            this.step++;
-          }, 550);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-      playSubBass(freq, duration) {
-        if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        const filter = this.ctx.createBiquadFilter();
-
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(130, this.ctx.currentTime);
-
-        gain.gain.setValueAtTime(0.8, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
-
-        osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(this.ctx.destination);
-
-        osc.start();
-        osc.stop(this.ctx.currentTime + duration);
-      }
-    }
-    const audio = new AudioEngine();
-
-    class TextureFactory {
-      static createText(text, fontSize, isGlow = false, color = '#ffffff') {
-        const c = document.createElement('canvas');
-        c.width = 1024; c.height = 256;
-        const ctx = c.getContext('2d');
-        ctx.clearRect(0, 0, 1024, 256);
-
-        if (isGlow) {
-          ctx.shadowColor = color;
-          ctx.shadowBlur = 24;
-        }
-
-        ctx.font = `900 ${fontSize * 2}px "Segoe UI", Arial, sans-serif`;
-        ctx.fillStyle = color;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(text, 512, 128);
-
-        const tex = new THREE.CanvasTexture(c);
-        tex.minFilter = THREE.LinearMipmapLinearFilter;
-        tex.magFilter = THREE.LinearFilter;
-        tex.generateMipmaps = true;
-        return tex;
-      }
-      static createCenterText(colorHex) {
-        const c = document.createElement('canvas');
-        c.width = 1024; c.height = 256;
-        const ctx = c.getContext('2d');
-        ctx.clearRect(0, 0, 1024, 256);
-
-        const neonHex = typeof colorHex === 'number'
-          ? '#' + colorHex.toString(16).padStart(6, '0')
-          : (colorHex || '#ff1040');
-
-        ctx.shadowColor = neonHex;
-        ctx.shadowBlur = 45;
-        ctx.font = 'bold 115px "Segoe UI", Arial, sans-serif';
-        ctx.fillStyle = neonHex;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('Love You', 512, 128);
-
-        ctx.shadowBlur = 20;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText('Love You', 512, 128);
-
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText('Love You', 512, 128);
-
-        const tex = new THREE.CanvasTexture(c);
-        tex.minFilter = THREE.LinearFilter;
-        tex.magFilter = THREE.LinearFilter;
-        return tex;
-      }
-      static createSoftParticle() {
-        const c = document.createElement('canvas');
-        c.width = 64; c.height = 64;
-        const ctx = c.getContext('2d');
-        const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-        grad.addColorStop(0, 'rgba(255,255,255,1)');
-        grad.addColorStop(0.3, 'rgba(255,255,255,0.6)');
-        grad.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0,0,64,64);
-        return new THREE.CanvasTexture(c);
-      }
-    }
-
-    const PALETTES = [
-      { name: 'Vampire', core: 0xffffff, neon: 0xff1040, dark: 0x30000a },
-      { name: 'Cyber', core: 0xffffff, neon: 0xa810ff, dark: 0x1a0033 },
-      { name: 'Abyss', core: 0xffffff, neon: 0x00c3ff, dark: 0x001433 },
-      { name: 'Solar', core: 0xffffff, neon: 0xffaa00, dark: 0x401a00 }
-    ];
-    let activePalette = 0;
-
-    const canvasEl = document.getElementById('universe-canvas');
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x010002, 0.0035);
-
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 0, 85);
-
-    const renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true, powerPreference: 'high-performance' });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    const starTex = TextureFactory.createSoftParticle();
-
-    const starGeo = new THREE.BufferGeometry();
-    const starCount = 1000;
-    const starPos = new Float32Array(starCount * 3);
-    for(let i=0; i<starCount; i++) {
-      starPos[i*3] = (Math.random() - 0.5) * 400;
-      starPos[i*3+1] = (Math.random() - 0.5) * 400;
-      starPos[i*3+2] = (Math.random() - 0.5) * 300 - 50;
-    }
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-    const starMat = new THREE.PointsMaterial({ size: 1.5, map: starTex, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
-    const starfield = new THREE.Points(starGeo, starMat);
-    scene.add(starfield);
-
-    const accretionVertexShader = `
-      attribute float aRadius;
-      attribute float aAngle;
-      attribute float aSpeed;
-      attribute float aHeight;
-      attribute float aSize;
-      attribute float aHeat;
-
-      uniform float uTime;
-      uniform float uSpeedMult;
-      uniform vec3 uColor;
-
-      varying vec3 vColor;
-      varying float vAlpha;
-
-      void main() {
-
-        float currentAngle = aAngle - uTime * (aSpeed * uSpeedMult / pow(aRadius, 1.25));
-
-        float x = cos(currentAngle) * aRadius;
-        float z = sin(currentAngle) * aRadius;
-        float y = aHeight * sin(currentAngle * 3.0 + aRadius * 0.4);
-
-        vec4 mvPosition = modelViewMatrix * vec4(x, y, z, 1.0);
-        gl_Position = projectionMatrix * mvPosition;
-
-        float doppler = 0.75 + 0.55 * sin(currentAngle);
-
-        vColor = mix(uColor, vec3(1.0, 1.0, 1.0), pow(aHeat, 1.8)) * doppler;
-        vAlpha = (0.35 + 0.65 * aHeat) * min(1.0, doppler);
-
-        gl_PointSize = aSize * (220.0 / -mvPosition.z);
-      }
-    `;
-
-    const accretionFragmentShader = `
-      varying vec3 vColor;
-      varying float vAlpha;
-
-      void main() {
-        vec2 coord = gl_PointCoord - vec2(0.5);
-        float dist = length(coord);
-        if (dist > 0.5) discard;
-        float glow = exp(-dist * 4.2);
-        gl_FragColor = vec4(vColor, vAlpha * glow);
-      }
-    `;
-
-    class BlackHole {
-      constructor() {
-        this.group = new THREE.Group();
-        this.group.position.set(0, 0, -35);
-        this.group.scale.set(0, 0, 0);
-        scene.add(this.group);
-
-        this.currentScale = 0;
-        this.targetScale = 0;
-        this.consumedCount = 0;
-
-        this.coreMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-        this.core = new THREE.Mesh(new THREE.SphereGeometry(7.0, 64, 64), this.coreMat);
-        this.group.add(this.core);
-
-        this.particleCount = 26000;
-        const diskGeo = new THREE.BufferGeometry();
-
-        const dummyPos = new Float32Array(this.particleCount * 3);
-        const aRadius = new Float32Array(this.particleCount);
-        const aAngle = new Float32Array(this.particleCount);
-        const aSpeed = new Float32Array(this.particleCount);
-        const aHeight = new Float32Array(this.particleCount);
-        const aSize = new Float32Array(this.particleCount);
-        const aHeat = new Float32Array(this.particleCount);
-
-        for (let i = 0; i < this.particleCount; i++) {
-          let r, speed, height, size, heat;
-
-          if (i < 5000) {
-
-            r = 7.15 + Math.random() * 1.3;
-            speed = 48.0 + Math.random() * 22.0;
-            height = (Math.random() - 0.5) * 0.45;
-            size = Math.random() * 2.2 + 1.2;
-            heat = 0.95 + Math.random() * 0.05;
-          } else if (i < 21000) {
-
-            const normR = Math.pow(Math.random(), 1.6);
-            r = 8.4 + normR * 26.0;
-            speed = 36.0 + Math.random() * 12.0;
-            height = (Math.random() - 0.5) * (0.8 + normR * 2.6);
-            size = Math.random() * 2.0 + 0.8;
-            heat = Math.max(0.0, 1.0 - normR);
-          } else {
-
-            const normR = Math.random();
-            r = 13.0 + normR * 27.0;
-            speed = 24.0 + Math.random() * 14.0;
-            height = (Math.random() - 0.5) * (3.0 + normR * 6.5);
-            size = Math.random() * 3.0 + 1.4;
-            heat = (1.0 - normR) * 0.45;
-          }
-
-          aRadius[i] = r;
-          aAngle[i] = Math.random() * Math.PI * 2;
-          aSpeed[i] = speed;
-          aHeight[i] = height;
-          aSize[i] = size;
-          aHeat[i] = heat;
-        }
-
-        diskGeo.setAttribute('position', new THREE.BufferAttribute(dummyPos, 3));
-        diskGeo.setAttribute('aRadius', new THREE.BufferAttribute(aRadius, 1));
-        diskGeo.setAttribute('aAngle', new THREE.BufferAttribute(aAngle, 1));
-        diskGeo.setAttribute('aSpeed', new THREE.BufferAttribute(aSpeed, 1));
-        diskGeo.setAttribute('aHeight', new THREE.BufferAttribute(aHeight, 1));
-        diskGeo.setAttribute('aSize', new THREE.BufferAttribute(aSize, 1));
-        diskGeo.setAttribute('aHeat', new THREE.BufferAttribute(aHeat, 1));
-
-        this.uniforms = {
-          uTime: { value: 0.0 },
-          uSpeedMult: { value: 1.0 },
-          uColor: { value: new THREE.Color(PALETTES[activePalette].neon) }
-        };
-
-        this.diskMat = new THREE.ShaderMaterial({
-          uniforms: this.uniforms,
-          vertexShader: accretionVertexShader,
-          fragmentShader: accretionFragmentShader,
-          transparent: true,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false
-        });
-
-        this.disk = new THREE.Points(diskGeo, this.diskMat);
-        this.disk.rotation.x = Math.PI / 2.35;
-        this.disk.rotation.y = -0.12;
-        this.group.add(this.disk);
-      }
-
-      update(delta, time, stage) {
-        if (stage === 1) {
-          this.group.visible = false;
-        } else if (stage === 2) {
-          this.group.visible = true;
-
-          this.uniforms.uTime.value = time;
-          this.uniforms.uSpeedMult.value = 1.0 + (this.currentScale - 0.8) * 0.4;
-
-          const advanceProgress = Math.min(1.0, Math.max(0, (time - 10.0) / 15.0));
-          this.group.position.z = THREE.MathUtils.lerp(-35, -8, advanceProgress);
-
-          const feedRatio = Math.min(1.0, this.consumedCount / 460);
-          this.targetScale = 0.8 + feedRatio * 2.4;
-          this.currentScale = THREE.MathUtils.lerp(this.currentScale, this.targetScale, delta * 3.0);
-          this.group.scale.setScalar(this.currentScale);
-
-          this.disk.rotation.z -= delta * 0.15;
-        } else if (stage === 3) {
-          this.group.visible = true;
-
-          this.uniforms.uTime.value = time;
-          this.uniforms.uSpeedMult.value = 3.5;
-
-          this.targetScale = 3.25;
-          this.currentScale = THREE.MathUtils.lerp(this.currentScale, this.targetScale, delta * 2.5);
-
-          const shake = (Math.random() - 0.5) * 0.7;
-          const shakeY = (Math.random() - 0.5) * 0.7;
-          this.group.position.x = shake;
-          this.group.position.y = shakeY;
-          this.group.position.z = -8;
-          this.group.scale.setScalar(this.currentScale * (1 + Math.sin(time * 50) * 0.05));
-          this.disk.rotation.z -= delta * 0.6;
-        } else if (stage >= 4) {
-
-          this.group.visible = false;
-          this.group.scale.set(0, 0, 0);
-        }
-      }
-
-      reset() {
-        this.group.visible = false;
-        this.group.position.set(0, 0, -35);
-        this.currentScale = 0.8;
-        this.targetScale = 0.8;
-        this.consumedCount = 0;
-        this.group.scale.set(0, 0, 0);
-        this.uniforms.uSpeedMult.value = 1.0;
-      }
-
-      updateColor(colorHex) {
-        this.uniforms.uColor.value.setHex(colorHex);
-      }
-    }
-    const blackHole = new BlackHole();
-
-    class SupernovaSystem {
-      constructor() {
-        this.group = new THREE.Group();
-        scene.add(this.group);
-
-        this.waves = [];
-        for(let i=0; i<4; i++) {
-          const wave = new THREE.Mesh(
-            new THREE.TorusGeometry(1, 0.15, 16, 120),
-            new THREE.MeshBasicMaterial({ color: PALETTES[activePalette].neon, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })
-          );
-          wave.rotation.x = Math.random() * Math.PI;
-          wave.rotation.y = Math.random() * Math.PI;
-          this.group.add(wave);
-          this.waves.push({ mesh: wave, active: false, speed: 0, scale: 1 });
-        }
-
-        this.novaSphere = new THREE.Mesh(
-          new THREE.SphereGeometry(1, 64, 64),
-          new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })
-        );
-        this.group.add(this.novaSphere);
-
-        this.debrisCount = 1200;
-        const debrisGeo = new THREE.BufferGeometry();
-        this.debrisPos = new Float32Array(this.debrisCount * 3);
-        this.debrisVel = new Float32Array(this.debrisCount * 3);
-        for(let i=0; i<this.debrisCount; i++) {
-          this.debrisPos[i*3] = 0;
-          this.debrisPos[i*3+1] = 0;
-          this.debrisPos[i*3+2] = -10;
-
-          const theta = Math.random() * Math.PI * 2;
-          const phi = Math.acos(Math.random() * 2 - 1);
-          const spd = Math.random() * 140 + 70;
-          this.debrisVel[i*3] = Math.sin(phi) * Math.cos(theta) * 2.0 * spd;
-          this.debrisVel[i*3+1] = Math.sin(phi) * Math.sin(theta) * 1.5 * spd;
-          this.debrisVel[i*3+2] = Math.cos(phi) * spd;
-        }
-        debrisGeo.setAttribute('position', new THREE.BufferAttribute(this.debrisPos, 3));
-        this.debrisMat = new THREE.PointsMaterial({
-          size: 2.0,
-          map: starTex,
-          color: 0xffffff,
-          transparent: true,
-          opacity: 0,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false
-        });
-        this.debris = new THREE.Points(debrisGeo, this.debrisMat);
-        this.group.add(this.debris);
-        this.debrisActive = false;
-      }
-
-      trigger() {
-        this.waves.forEach((w, idx) => {
-          w.active = true;
-          w.scale = 1;
-          w.mesh.scale.set(1,1,1);
-          w.mesh.material.opacity = 1;
-          w.speed = 2.4 + idx * 1.4;
-        });
-
-        this.novaSphere.scale.set(1,1,1);
-        this.novaSphere.material.opacity = 1.0;
-
-        const posArr = this.debris.geometry.attributes.position.array;
-        for(let i=0; i<this.debrisCount; i++) {
-          posArr[i*3] = 0;
-          posArr[i*3+1] = 0;
-          posArr[i*3+2] = -10;
-        }
-        this.debris.geometry.attributes.position.needsUpdate = true;
-        this.debrisMat.opacity = 1.0;
-        this.debrisActive = true;
-      }
-
-      update(delta) {
-        this.waves.forEach(w => {
-          if (w.active) {
-            w.scale += w.speed * delta * 60;
-            w.mesh.scale.set(w.scale, w.scale, w.scale);
-            w.mesh.material.opacity *= Math.pow(0.93, delta * 60);
-            if (w.mesh.material.opacity < 0.01) w.active = false;
-          }
-        });
-
-        if (this.novaSphere.material.opacity > 0.01) {
-          this.novaSphere.scale.addScalar(delta * 180);
-          this.novaSphere.material.opacity *= Math.pow(0.85, delta * 60);
-        }
-
-        if (this.debrisActive) {
-          const posArr = this.debris.geometry.attributes.position.array;
-          for(let i=0; i<this.debrisCount; i++) {
-            posArr[i*3] += this.debrisVel[i*3] * delta;
-            posArr[i*3+1] += this.debrisVel[i*3+1] * delta;
-            posArr[i*3+2] += this.debrisVel[i*3+2] * delta;
-            this.debrisVel[i*3] *= Math.pow(0.965, delta * 60);
-            this.debrisVel[i*3+1] *= Math.pow(0.965, delta * 60);
-            this.debrisVel[i*3+2] *= Math.pow(0.965, delta * 60);
-          }
-          this.debris.geometry.attributes.position.needsUpdate = true;
-          this.debrisMat.opacity *= Math.pow(0.965, delta * 60);
-          if (this.debrisMat.opacity < 0.01) this.debrisActive = false;
-        }
-      }
-
-      reset() {
-        this.waves.forEach(w => {
-          w.active = false;
-          w.mesh.scale.set(1, 1, 1);
-          w.mesh.material.opacity = 0;
-        });
-        this.novaSphere.scale.set(1, 1, 1);
-        this.novaSphere.material.opacity = 0;
-        this.debrisActive = false;
-        this.debrisMat.opacity = 0;
-      }
-
-      updateColor(colorHex) {
-        this.waves.forEach(w => w.mesh.material.color.setHex(colorHex));
-        this.debrisMat.color.setHex(colorHex);
-      }
-    }
-    const supernova = new SupernovaSystem();
-
-    class HeartSystem {
-      constructor() {
-        this.particles = [];
-        this.group = new THREE.Group();
-        scene.add(this.group);
-
-        this.texWord = TextureFactory.createText('Love You', 80, false);
-        this.texCenter = TextureFactory.createCenterText(PALETTES[activePalette].neon);
-
-        this.neonMat = new THREE.SpriteMaterial({ map: this.texWord, color: PALETTES[activePalette].neon, transparent: true, blending: THREE.AdditiveBlending });
-        this.coreMat = new THREE.SpriteMaterial({ map: this.texWord, color: PALETTES[activePalette].core, transparent: true, blending: THREE.AdditiveBlending });
-
-        this.particleCount = 480;
-        const heartScale = 2.25;
-
-        for (let i = 0; i < this.particleCount; i++) {
-          const isEdge = i < this.particleCount * 0.6;
-          const fillRatio = isEdge ? 1.0 : Math.pow(Math.random(), 0.5) * 0.95;
-
-          const t = Math.random() * Math.PI * 2;
-          const x = 16 * Math.pow(Math.sin(t), 3);
-          const y = (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-
-          const zDepth = isEdge ? 0 : (Math.random() - 0.5) * 12 * (1 - fillRatio);
-          const targetPos = new THREE.Vector3(x * heartScale * fillRatio, y * heartScale * fillRatio, zDepth);
-
-          const isBright = Math.random() > 0.6;
-          const sprite = new THREE.Sprite(isBright ? this.coreMat.clone() : this.neonMat.clone());
-
-          sprite.position.set(
-            (Math.random() - 0.5) * 220,
-            (Math.random() - 0.5) * 140,
-            (Math.random() - 0.5) * 90
-          );
-
-          const s = isEdge ? (Math.random() * 0.5 + 1.05) : (Math.random() * 0.8 + 0.95);
-          sprite.scale.set(s * 8.5, s * 2.125, 1);
-
-          this.group.add(sprite);
-
-          let morphDelay;
-          if (isEdge) {
-            const normT = Math.abs((t % (Math.PI * 2)) - Math.PI) / Math.PI;
-            morphDelay = normT * 0.28 + (Math.random() * 0.05);
-          } else {
-            const normY = Math.max(0, Math.min(1.0, (y + 18) / 36));
-            morphDelay = 0.22 + normY * 0.24 + (Math.random() * 0.06);
-          }
-
-          this.particles.push({
-            mesh: sprite,
-            targetPos: targetPos,
-            vel: new THREE.Vector3((Math.random() - 0.5) * 0.6, (Math.random() - 0.5) * 0.6, (Math.random() - 0.5) * 0.6),
-            mass: Math.random() * 0.5 + 0.5,
-            orbitAxis: new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize(),
-            phase: Math.random() * Math.PI * 2,
-            isEdge: isEdge,
-            morphDelay: morphDelay,
-            consumed: false
-          });
-        }
-
-        this.centerGroup = new THREE.Group();
-
-        this.centerGlow = new THREE.Sprite(new THREE.SpriteMaterial({
-          map: this.texCenter,
-          color: 0xffffff,
-          transparent: true,
-          blending: THREE.AdditiveBlending
-        }));
-        this.centerGlow.position.set(0, 1.5, 0.4);
-        this.centerGlow.scale.set(46, 11.5, 1);
-        this.centerGlow.material.opacity = 0;
-        this.centerGroup.add(this.centerGlow);
-
-        this.centerCore = new THREE.Sprite(new THREE.SpriteMaterial({
-          map: this.texCenter,
-          color: 0xffffff,
-          transparent: true,
-          blending: THREE.AdditiveBlending
-        }));
-        this.centerCore.position.set(0, 1.5, 0.5);
-        this.centerCore.scale.set(42, 10.5, 1);
-        this.centerCore.material.opacity = 0;
-        this.centerGroup.add(this.centerCore);
-
-        scene.add(this.centerGroup);
-      }
-
-      update(delta, time, stage, beat) {
-        const bhPos = blackHole.group.position;
-
-        for (let p of this.particles) {
-          if (stage === 1) {
-
-            p.mesh.position.add(p.vel);
-            p.mesh.position.x += Math.sin(time * 0.9 + p.phase) * 0.12;
-            p.mesh.position.y += Math.cos(time * 0.8 + p.phase) * 0.12;
-            p.mesh.position.z += Math.sin(time * 0.6 + p.phase) * 0.08;
-
-            if (p.mesh.position.y < -85) p.mesh.position.y = 85;
-            if (p.mesh.position.y > 85) p.mesh.position.y = -85;
-            if (p.mesh.position.x < -130) p.mesh.position.x = 130;
-            if (p.mesh.position.x > 130) p.mesh.position.x = -130;
-          }
-          else if (stage === 2 || stage === 3) {
-
-            if (!p.consumed) {
-              const dir = new THREE.Vector3().subVectors(bhPos, p.mesh.position);
-              const dist = dir.length();
-              dir.normalize();
-
-              const captureThreshold = Math.max(1.6, 2.8 * (blackHole.currentScale / 3.2));
-              if (dist < captureThreshold || (stage === 3 && dist < 15)) {
-
-                p.consumed = true;
-                p.mesh.position.copy(bhPos);
-                p.mesh.visible = false;
-                blackHole.consumedCount++;
-              } else {
-
-                const stageProgress = Math.min(1.0, Math.max(0, (time - 10.0) / 15.0));
-                const inwardSpeed = 22 + stageProgress * 50 + (1 / Math.max(dist, 1)) * 35;
-                const pull = dir.clone().multiplyScalar(inwardSpeed * delta * 60);
-
-                const tangent = new THREE.Vector3().crossVectors(dir, p.orbitAxis).normalize();
-                const orbitSpeed = 12 + stageProgress * 22;
-                const orbit = tangent.multiplyScalar(orbitSpeed * delta * 60);
-
-                p.vel.lerp(pull.add(orbit), delta * 6.5);
-                p.mesh.position.addScaledVector(p.vel, delta);
-
-                const stretch = Math.min(1.0, dist / 14);
-                p.mesh.scale.set(8.5 * (0.35 + 0.65 * stretch), 2.125 * Math.max(0.15, stretch), 1);
-              }
-            }
-          }
-          else if (stage === 4) {
-
-            p.mesh.visible = true;
-            p.mesh.position.addScaledVector(p.vel, delta);
-            p.vel.multiplyScalar(Math.pow(0.965, delta * 60));
-
-            p.mesh.material.rotation = (p.mesh.material.rotation || 0) + (p.rotSpeed || 0.05) * delta;
-
-            const targetScaleX = (p.isEdge ? 7.2 : 8.8);
-            p.mesh.scale.x = THREE.MathUtils.lerp(p.mesh.scale.x, targetScaleX, delta * 3);
-            p.mesh.scale.y = THREE.MathUtils.lerp(p.mesh.scale.y, targetScaleX / 4, delta * 3);
-          }
-          else if (stage === 5) {
-
-            p.mesh.visible = true;
-
-            const morphTime = Math.max(0, time - 37.0);
-            const totalMorphDuration = 17.0;
-            const globalProgress = Math.min(1.0, morphTime / totalMorphDuration);
-
-            const particleDelay = p.morphDelay || 0;
-            const glideWindow = 0.44;
-            const localProgress = Math.max(0, Math.min(1.0, (globalProgress - particleDelay) / glideWindow));
-
-            const easeQuintic = Math.pow(localProgress, 3) * (localProgress * (6 * localProgress - 15) + 10);
-
-            if (p.mesh.material.rotation) {
-              p.mesh.material.rotation = THREE.MathUtils.lerp(p.mesh.material.rotation, 0, delta * 1.5);
-            }
-
-            const heartBeatStrength = Math.max(0, (globalProgress - 0.75) / 0.25);
-            const currentBeat = 1.0 + (beat - 1.0) * heartBeatStrength;
-            const pulse = 1.0 + Math.sin(time * 2.0 + p.phase) * (0.01 + 0.025 * heartBeatStrength);
-
-            const targetX = p.targetPos.x * currentBeat * pulse;
-            const targetY = p.targetPos.y * currentBeat * pulse;
-            const targetZ = p.targetPos.z * pulse;
-            const currentTarget = new THREE.Vector3(targetX, targetY, targetZ);
-
-            const displacement = new THREE.Vector3().subVectors(currentTarget, p.mesh.position);
-
-            const springStrength = 0.0006 + easeQuintic * 0.015;
-            const springForce = displacement.multiplyScalar(springStrength / p.mass);
-            p.vel.add(springForce);
-
-            const dampingFactor = 0.965 - easeQuintic * 0.09;
-            p.vel.multiplyScalar(Math.pow(dampingFactor, delta * 60));
-            p.mesh.position.addScaledVector(p.vel, delta * 60);
-
-            const targetScaleX = (p.isEdge ? 8.8 : 10.8);
-            p.mesh.scale.x = THREE.MathUtils.lerp(p.mesh.scale.x, targetScaleX, delta * 2.0);
-            p.mesh.scale.y = THREE.MathUtils.lerp(p.mesh.scale.y, targetScaleX / 4, delta * 2.0);
-          }
-        }
-
-        if (stage === 5) {
-          const centerProgress = Math.min(1.0, Math.max(0, (time - 40.5) / 5.5));
-          const heartFormedFactor = Math.pow(centerProgress, 1.4);
-
-          this.centerGlow.material.opacity = THREE.MathUtils.lerp(this.centerGlow.material.opacity, heartFormedFactor * 0.85, delta * 3.0);
-          this.centerGlow.scale.set(48 * beat, 12 * beat, 1);
-
-          this.centerCore.material.opacity = THREE.MathUtils.lerp(this.centerCore.material.opacity, heartFormedFactor * 0.98, delta * 3.0);
-          this.centerCore.scale.set(44 * beat, 11 * beat, 1);
-        }
-      }
-
-      triggerSupernovaBlast() {
-        const bhPos = blackHole.group.position;
-        for (let p of this.particles) {
-          p.consumed = false;
-          p.mesh.visible = true;
-          p.mesh.position.set(
-            bhPos.x + (Math.random() - 0.5) * 2,
-            bhPos.y + (Math.random() - 0.5) * 2,
-            bhPos.z + (Math.random() - 0.5) * 2
-          );
-          const theta = Math.random() * Math.PI * 2;
-          const phi = Math.acos(Math.random() * 2 - 1);
-          const speed = Math.random() * 105 + 55;
-          p.vel.set(
-            Math.sin(phi) * Math.cos(theta) * 2.0,
-            Math.sin(phi) * Math.sin(theta) * 1.5,
-            Math.cos(phi) * 1.1
-          ).multiplyScalar(speed);
-          p.rotSpeed = (Math.random() - 0.5) * 4.0;
-        }
-      }
-
-      manualDetonation() {
-        for (let p of this.particles) {
-          const theta = Math.random() * Math.PI * 2;
-          const phi = Math.acos(Math.random() * 2 - 1);
-          const speed = Math.random() * 55 + 25;
-          p.vel.add(new THREE.Vector3(
-            Math.sin(phi) * Math.cos(theta) * 1.8,
-            Math.sin(phi) * Math.sin(theta) * 1.4,
-            Math.cos(phi)
-          ).multiplyScalar(speed));
-          p.rotSpeed = (Math.random() - 0.5) * 4.0;
-        }
-      }
-
-      reset() {
-        for (let p of this.particles) {
-          p.mesh.position.set(
-            (Math.random() - 0.5) * 200,
-            (Math.random() - 0.5) * 140,
-            (Math.random() - 0.5) * 100 - 15
-          );
-          p.vel.set((Math.random() - 0.5) * 0.35, (Math.random() - 0.5) * 0.35, (Math.random() - 0.5) * 0.2);
-          p.consumed = false;
-          p.mesh.visible = true;
-          p.mesh.scale.set(8.5, 2.125, 1);
-          if (p.mesh.material.rotation) p.mesh.material.rotation = 0;
-        }
-        this.centerGlow.material.opacity = 0;
-        this.centerCore.material.opacity = 0;
-      }
-
-      updateColor(colorHex) {
-        this.particles.forEach(p => {
-          if(!p.mesh.material.color.equals(new THREE.Color(0xffffff))) {
-            p.mesh.material.color.setHex(colorHex);
-          }
-        });
-        this.texCenter = TextureFactory.createCenterText(colorHex);
-        this.centerGlow.material.map = this.texCenter;
-        this.centerGlow.material.needsUpdate = true;
-        this.centerCore.material.map = this.texCenter;
-        this.centerCore.material.needsUpdate = true;
-      }
-    }
-    const heartSystem = new HeartSystem();
-
-    class PostRainSystem {
-      constructor() {
-        this.rainParticles = [];
-        this.group = new THREE.Group();
-        this.group.visible = false;
-        scene.add(this.group);
-
-        const rainMat = new THREE.SpriteMaterial({
-          map: TextureFactory.createText('Love You', 40, false),
-          color: PALETTES[activePalette].neon,
-          transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending
-        });
-
-        for(let i=0; i<150; i++) {
-          const sprite = new THREE.Sprite(rainMat.clone());
-          sprite.position.set((Math.random() - 0.5) * 300, (Math.random() - 0.5) * 200, (Math.random() - 0.5) * 150 - 50);
-          const s = Math.random() * 0.8 + 0.5;
-          sprite.scale.set(s * 5.5, s * 1.375, 1);
-          this.group.add(sprite);
-          this.rainParticles.push({
-            mesh: sprite,
-            vy: -(Math.random() * 0.6 + 0.3)
-          });
-        }
-      }
-      update(stage) {
-        if (stage >= 5 && time > 52.0) {
-          this.group.visible = true;
-          for(let r of this.rainParticles) {
-            r.mesh.position.y += r.vy;
-            if (r.mesh.position.y < -100) {
-              r.mesh.position.y = 120;
-              r.mesh.position.x = (Math.random() - 0.5) * 300;
-            }
-          }
-        }
-      }
-      reset() {
-        this.group.visible = false;
-        for(let r of this.rainParticles) {
-          r.mesh.position.set((Math.random() - 0.5) * 300, (Math.random() - 0.5) * 200, (Math.random() - 0.5) * 150 - 50);
-        }
-      }
-      updateColor(colorHex) {
-        this.rainParticles.forEach(r => r.mesh.material.color.setHex(colorHex));
-      }
-    }
-    const postRain = new PostRainSystem();
-
-    let time = 0;
-    let stage = 0;
-
-    const startBtn = document.getElementById('startBtn');
-    const flash = document.getElementById('flash');
-
-    startBtn.addEventListener('click', () => {
-      startBtn.style.opacity = '0';
-      startBtn.style.transform = 'translate(-50%, -50%) scale(1.5)';
-      setTimeout(() => startBtn.remove(), 600);
-
-      audio.init();
-      stage = 1;
-    });
-
-    function triggerSupernovaSequence() {
-      stage = 4;
-
-      flash.style.opacity = '1';
-      flash.style.transition = 'none';
-      setTimeout(() => { flash.style.transition = 'opacity 2s ease-out'; flash.style.opacity = '0'; }, 50);
-
-      supernova.trigger();
-      heartSystem.triggerSupernovaBlast();
-    }
-
-    function replayExperience() {
-      time = 0;
-      stage = 1;
-      blackHole.reset();
-      supernova.reset();
-      heartSystem.reset();
-      postRain.reset();
-      audio.replay();
-    }
-
-    window.addEventListener('pointerdown', (e) => {
-      if (e.target === startBtn) return;
-      if (stage === 5 && time > 52.0) {
-        flash.style.opacity = '0.4'; flash.style.transition = 'none';
-        setTimeout(() => { flash.style.transition = 'opacity 0.8s ease-out'; flash.style.opacity = '0'; }, 30);
-        supernova.trigger();
-        heartSystem.manualDetonation();
-      }
-    });
-
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') {
-        activePalette = (activePalette + 1) % PALETTES.length;
-        const cHex = PALETTES[activePalette].neon;
-
-        blackHole.updateColor(cHex);
-        supernova.updateColor(cHex);
-        heartSystem.updateColor(cHex);
-        postRain.updateColor(cHex);
-      } else if (e.code === 'KeyR') {
-        replayExperience();
-      }
-    });
-
-    let mouseX = 0, mouseY = 0;
-    window.addEventListener('mousemove', (e) => {
-      mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-      mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
-    });
-
-    const clock = new THREE.Clock();
-
-    function animate() {
-      requestAnimationFrame(animate);
-      if (stage === 0) { renderer.render(scene, camera); return; }
-
-      const delta = clock.getDelta();
-      time += delta;
-
-      audio.fadeAtEnd(time);
-
-      if (stage === 1 && time >= 10.0) {
-        stage = 2;
-      }
-      if (stage === 2 && (time >= 26.0 || blackHole.consumedCount >= 460)) {
-        stage = 3;
-      }
-      if (stage === 3 && time >= 32.0) {
-        triggerSupernovaSequence();
-      }
-      if (stage === 4 && time >= 37.0) {
-        stage = 5;
-      }
-
-      const beat = 1.0 + Math.pow(Math.max(0, Math.sin(time * 3.4)), 6) * 0.12;
-
-      if (stage < 3) {
-        camera.position.x = THREE.MathUtils.lerp(camera.position.x, mouseX * 12, delta * 1.5);
-        camera.position.y = THREE.MathUtils.lerp(camera.position.y, mouseY * 12, delta * 1.5);
-        camera.position.z = THREE.MathUtils.lerp(camera.position.z, 85, delta * 1.5);
-        camera.lookAt(0, 0, 0);
-      } else if (stage === 3) {
-        camera.position.x = THREE.MathUtils.lerp(camera.position.x, mouseX * 15, delta * 1.5);
-        camera.position.y = THREE.MathUtils.lerp(camera.position.y, mouseY * 15, delta * 1.5);
-        camera.position.z = THREE.MathUtils.lerp(camera.position.z, 96, delta * 1.5);
-        camera.lookAt(0, 0, 0);
-      } else if (stage === 4) {
-        const blastShake = Math.max(0, 1 - (time - 32.0) / 5.0) * 1.4;
-        camera.position.x += (Math.random() - 0.5) * blastShake;
-        camera.position.y += (Math.random() - 0.5) * blastShake;
-        camera.lookAt(0, 0, 0);
-      } else {
-        const panX = Math.sin(time * 0.15) * 20 + (mouseX * 15);
-        const panY = Math.sin(time * 0.25) * 8 + (mouseY * 15);
-        camera.position.x = THREE.MathUtils.lerp(camera.position.x, panX, delta * 1.5);
-        camera.position.y = THREE.MathUtils.lerp(camera.position.y, panY, delta * 1.5);
-        camera.position.z = THREE.MathUtils.lerp(camera.position.z, 85, delta * 1.5);
-        camera.lookAt(0, 0, 0);
-      }
-
-      starfield.rotation.y = time * 0.02;
-
-      blackHole.update(delta, time, stage);
-      heartSystem.update(delta, time, stage, beat);
-      supernova.update(delta);
-      postRain.update(stage);
-
-      renderer.render(scene, camera);
-    }
-
-    animate();
-  </script>
+<!-- Preloader -->
+<div id="preloader">
+<div class="loader-content">
+<div class="loader-icon-box">
+<i class="fas fa-code pulse-icon"></i>
+</div>
+<h2><span data-lang-ar="مركز النجاح" data-lang-en="Al-Najah Hub">مركز النجاح</span></h2>
+<p class="loader-sub"><span data-lang-ar="برمجة وحلول تقنية • بحوث وتقارير جامعية" data-lang-en="Tech Solutions • Academic Research">برمجة وحلول تقنية • بحوث وتقارير جامعية</span></p>
+<div class="loader-bar"><div class="loader-progress"></div></div>
+</div>
+</div>
+<!-- Ambient Glowing Blobs -->
+<div class="bg-blobs">
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+</div>
+<div class="container">
+<!-- Navigation Bar -->
+<nav>
+<div class="glass nav-inner">
+<button aria-label="القائمة" class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
+<a class="nav-logo" href="#home">
+<span class="logo-icon-wrap"><i class="fas fa-terminal"></i></span>
+<div class="logo-text-wrap">
+<span class="logo-brand"><span data-lang-ar="مركز النجاح" data-lang-en="Al-Najah Hub">مركز النجاح</span></span>
+<span class="logo-tag">Tech &amp; Academics</span>
+</div>
+</a>
+<ul class="nav-links">
+<li><a data-lang-ar="الرئيسية" data-lang-en="Home" href="#home">الرئيسية</a></li>
+<li><a data-lang-ar="&lt;i class='fas fa-code'&gt;&lt;/i&gt; السورس كود" data-lang-en="&lt;i class='fas fa-code'&gt;&lt;/i&gt; Source Code" href="#projects-showcase"><i class="fas fa-code"></i> السورس كود</a></li>
+<li><a data-lang-ar="&lt;i class='fas fa-laptop-code'&gt;&lt;/i&gt; حلول برمجية" data-lang-en="&lt;i class='fas fa-laptop-code'&gt;&lt;/i&gt; Tech Solutions" href="#tech-services"><i class="fas fa-laptop-code"></i> حلول برمجية</a></li>
+<li><a data-lang-ar="&lt;i class='fas fa-graduation-cap'&gt;&lt;/i&gt; بحوث وتقارير" data-lang-en="&lt;i class='fas fa-graduation-cap'&gt;&lt;/i&gt; Academics" href="#academic-services"><i class="fas fa-graduation-cap"></i> بحوث وتقارير</a></li>
+</ul>
+<div class="nav-actions">
+<button class="btn btn-outline nav-cta" id="lang-toggle" style="padding: 6px 12px !important; margin-left: 10px; min-width: 45px;">EN</button>
+<a class="btn btn-insta nav-cta" data-lang-ar="&lt;i class='fab fa-instagram'&gt;&lt;/i&gt; الطلب عبر الانستقرام" data-lang-en="&lt;i class='fab fa-instagram'&gt;&lt;/i&gt; Order on Instagram" href="https://instagram.com/al_najah_hub" target="_blank">
+<i class="fab fa-instagram"></i> الطلب عبر الانستقرام
+                    </a>
+</div>
+</div>
+</nav>
+<!-- Hero Section -->
+<section id="home">
+<div class="glass hero-box">
+<div class="hero-content">
+<div class="hero-badges-wrapper">
+<span class="badge-chip tech-chip">
+<i class="fas fa-code-branch"></i><span data-lang-ar="برمجة وحلول تقنية" data-lang-en="Programming &amp; Tech Solutions">برمجة وحلول تقنية</span></span>
+<span class="badge-chip academic-chip">
+<i class="fas fa-user-graduate"></i><span data-lang-ar="بحوث وتقارير جامعية" data-lang-en="Academic Research &amp; Reports">بحوث وتقارير جامعية</span></span>
+</div>
+<h1 class="hero-title">
+<span data-texts='["حلول برمجية وتطوير مواقع احترافية", "سورس كود كامل قابل للتحميل المباشر", "بحوث وتقارير جامعية معتمدة ورصينة", "الطلب والاستفسار متاح عبر الانستقرام"]' data-texts-ar='["حلول برمجية وتطوير مواقع احترافية", "سورس كود كامل قابل للتحميل المباشر", "بحوث وتقارير جامعية معتمدة ورصينة", "الطلب والاستفسار متاح عبر الانستقرام"]' data-texts-en='["Professional Web Development Solutions", "Full Source Code Ready to Download", "Reliable Academic Research &amp; Reports", "Orders and Inquiries via Instagram"]' id="typewriter-text"></span>
+<span class="typewriter-cursor"> </span>
+</h1>
+<p class="hero-desc" data-lang-ar="وجهتك المتكاملة للحلول الرقمية والأكاديمية: نبرمج لك مواقع وتطبيقات عصرية مع إتاحة سورس كود كامل وجاهز للتحميل والتعديل، بالإضافة إلى خدمات كتابة وتنسيق البحوث والتقارير الجامعية وتصميم الأغلفة الرسمية." data-lang-en="Your ultimate destination for digital and academic solutions. We develop modern websites and apps with full source code ready to download. We also offer academic research writing, formatting, and official cover design services.">
+                        وجهتك المتكاملة للحلول الرقمية والأكاديمية: نبرمج لك مواقع وتطبيقات عصرية مع إتاحة سورس كود كامل وجاهز للتحميل والتعديل، بالإضافة إلى خدمات كتابة وتنسيق البحوث والتقارير الجامعية وتصميم الأغلفة الرسمية.
+                    </p>
+<div class="hero-cta-group">
+<a class="btn btn-primary hero-btn" data-lang-ar="&lt;i class='fas fa-eye'&gt;&lt;/i&gt; معاينة السورس كود" data-lang-en="&lt;i class='fas fa-eye'&gt;&lt;/i&gt; View Source Code" href="#projects-showcase">
+<i class="fas fa-eye"></i> معاينة السورس كود
+                        </a>
+<a class="btn btn-insta hero-btn" data-lang-ar="&lt;i class='fab fa-instagram'&gt;&lt;/i&gt; اطلب الآن عبر الانستقرام" data-lang-en="&lt;i class='fab fa-instagram'&gt;&lt;/i&gt; Order Now via Instagram" href="https://instagram.com/al_najah_hub" target="_blank">
+<i class="fab fa-instagram"></i> اطلب الآن عبر الانستقرام
+                        </a>
+<a class="btn btn-orange hero-btn" data-lang-ar="&lt;i class='fas fa-file-signature'&gt;&lt;/i&gt; خدمات البحوث والتقارير" data-lang-en="&lt;i class='fas fa-file-signature'&gt;&lt;/i&gt; Research &amp; Reports Services" href="#academic-services">
+<i class="fas fa-file-signature"></i> خدمات البحوث والتقارير
+                        </a>
+</div>
+</div>
+<div class="hero-featured-grid">
+<!-- Tech Showcase Box -->
+<div class="glass feature-preview-card tech-card">
+<div class="preview-card-header">
+<span class="pulse-indicator"></span>
+<span class="preview-tag"><span data-lang-ar="سورس كود 3D متاح للتحميل" data-lang-en="3D Source Code Available">سورس كود 3D متاح للتحميل</span></span>
+</div>
+<div class="card-icon-circle tech-circle">
+<i class="fas fa-cubes"></i>
+</div>
+<h3><span data-lang-ar="مشروع Love You 3D Universe" data-lang-en="Love You 3D Universe Project">مشروع Love You 3D Universe</span></h3>
+<p><span data-lang-ar="عالم فضاء تفاعلي ثلاثي الأبعاد مبني بـ Three.js متاح للمعاينة المباشرة وتحميل الكود كاملاً مجاناً." data-lang-en="A 3D interactive space world built with Three.js, available for live preview and free full source code download.">عالم فضاء تفاعلي ثلاثي الأبعاد مبني بـ Three.js متاح للمعاينة المباشرة وتحميل الكود كاملاً مجاناً.</span></p>
+<a class="preview-link" data-lang-ar="معاينة وتحميل السورس كود" data-lang-en="Preview and download source code" href="#projects-showcase">
+                            معاينة وتحميل السورس كود <i class="fas fa-arrow-left"></i>
+</a>
+</div>
+<!-- Academic Showcase Box -->
+<div class="glass feature-preview-card academic-card">
+<div class="preview-card-header">
+<span class="pulse-indicator orange"></span>
+<span class="preview-tag"><span data-lang-ar="خدمة أكاديمية سريعة" data-lang-en="Fast Academic Service">خدمة أكاديمية سريعة</span></span>
+</div>
+<div class="card-icon-circle academic-circle">
+<i class="fas fa-book-open"></i>
+</div>
+<h3><span data-lang-ar="بحوث وتقارير موثقة" data-lang-en="Documented Research &amp; Reports">بحوث وتقارير موثقة</span></h3>
+<p><span data-lang-ar="كتابة محتوى أكاديمي رصين وموثق لكافة التخصصات مع بوت تلجرام لتصميم أغلفة التقارير فورياً." data-lang-en="Writing reliable and documented academic content for all majors with a Telegram bot for instant report cover design.">كتابة محتوى أكاديمي رصين وموثق لكافة التخصصات مع بوت تلجرام لتصميم أغلفة التقارير فورياً.</span></p>
+<a class="preview-link orange-link" data-lang-ar="تجربة بوت الغلاف الفوري" data-lang-en="Try the Instant Cover Bot" href="https://t.me/InstantReportsBot" target="_blank">
+                            تجربة بوت الغلاف الفوري <i class="fas fa-external-link-alt"></i>
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- ============================================================ -->
+<!-- FEATURED SHOWCASE: LOVE.HTML PROJECT & SOURCE CODE DOWNLOAD  -->
+<!-- ============================================================ -->
+<section class="reveal" id="projects-showcase">
+<div class="section-header">
+<span class="section-badge tech-badge"><i class="fas fa-code"></i><span data-lang-ar="معرض البرمجة والسورس كود" data-lang-en="Programming &amp; Source Code Gallery">معرض البرمجة والسورس كود</span></span>
+<h2><span data-lang-ar="مشروع Love You - The 3D Cinematic Universe" data-lang-en="Love You - The 3D Cinematic Universe Project">مشروع Love You - The 3D Cinematic Universe</span></h2>
+<p><span data-lang-ar="مشروع ويب تفاعلي ثلاثي الأبعاد تم تطويره باحترافية عالية باستخدام Three.js و WebGL. يمكنك معاينته حياً في المتصفح أو تحميل السورس كود الكامل مباشرة!" data-lang-en="A highly professional 3D interactive web project developed using Three.js and WebGL. You can preview it live or download the full source code directly!">مشروع ويب تفاعلي ثلاثي الأبعاد تم تطويره باحترافية عالية باستخدام Three.js و WebGL. يمكنك معاينته حياً في المتصفح أو تحميل السورس كود الكامل مباشرة!</span></p>
+</div>
+<!-- Single Featured Masterpiece Project Card -->
+<div class="featured-project-container glass">
+<div class="mockup-top-bar">
+<span class="browser-dot red"></span>
+<span class="browser-dot yellow"></span>
+<span class="browser-dot green"></span>
+<span class="mockup-url"><i class="fas fa-lock"></i> love.html - Three.js 3D Universe Edition</span>
+<span class="project-badge free-badge" data-lang-ar="سورس كود كامل قابل للتحميل" data-lang-en="Full downloadable source code"><i class="fas fa-download"></i> سورس كود كامل قابل للتحميل</span>
+</div>
+<div class="featured-project-body">
+<!-- Project Screenshot Preview -->
+<div class="featured-img-wrap">
+<img alt="Love You 3D Universe Preview" class="featured-img" loading="lazy" src="images/love_preview.png"/>
+</div>
+<!-- Project Details & Actions -->
+<div class="featured-content">
+<div class="project-tags">
+<span class="tech-tag"><i class="fas fa-cube"></i> Three.js</span>
+<span class="tech-tag"><i class="fas fa-vr-cardboard"></i> WebGL 3D</span>
+<span class="tech-tag"><i class="fas fa-music"></i> Audio Engine</span>
+<span class="tech-tag"><i class="fas fa-magic"></i> Particle System</span>
+<span class="tech-tag"><i class="fas fa-bolt"></i> Supernova Blast</span>
+<span class="tech-tag"><i class="fas fa-code"></i> Pure HTML/JS</span>
+</div>
+<h3 class="featured-title" data-lang-ar="عالم الفضاء والكون التفاعلي ثلاثي الأبعاد (Love You 3D)" data-lang-en="Interactive 3D Universe (Love You 3D)">عالم الفضاء والكون التفاعلي ثلاثي الأبعاد (Love You 3D)</h3>
+<p class="featured-desc" data-lang-ar="محاكاة كونية بصرية مبهرة؛ تدور آلاف الجسيمات في فضاء ثلاثي الأبعاد يحاكي حركة المجرات." data-lang-en="A stunning cosmic visual simulation featuring thousands of particles orbiting in a 3D space simulating galaxy movements.">
+                            محاكاة كونية بصرية مبهرة؛ تدور آلاف الجسيمات في فضاء ثلاثي الأبعاد يحاكي حركة المجرات.
+                        </p>
+<div class="features-highlight-grid">
+<div class="feature-item">
+<i class="fas fa-check-circle text-cyan"></i>
+<span data-lang-ar="سورس كود نظيف في ملف واحد متكامل جاهز للتشغيل فوراً." data-lang-en="Clean source code in a single file ready to run immediately.">سورس كود نظيف في ملف واحد متكامل جاهز للتشغيل فوراً.</span>
+</div>
+<div class="feature-item">
+<i class="fas fa-check-circle text-cyan"></i>
+<span data-lang-ar="يدعم التعديل السهل على النصوص، الألوان، الحركات، والأصوات." data-lang-en="Supports easy modification of texts, colors, animations, and sounds.">يدعم التعديل السهل على النصوص، الألوان، الحركات، والأصوات.</span>
+</div>
+</div>
+<div class="featured-actions-group">
+<a class="btn btn-download action-btn" data-lang-ar="&lt;i class='fas fa-download'&gt;&lt;/i&gt; تحميل المشروع" data-lang-en="&lt;i class='fas fa-download'&gt;&lt;/i&gt; Download Project" href="https://www.mediafire.com/file/ry1q1ttx4abzor9/love.rar/file" target="_blank">
+<i class="fas fa-download"></i> تحميل المشروع
+                            </a>
+<a class="btn btn-insta action-btn" data-lang-ar="&lt;i class='fab fa-instagram'&gt;&lt;/i&gt; طلب تصميم خاص بسعر معين" data-lang-en="&lt;i class='fab fa-instagram'&gt;&lt;/i&gt; Custom Design Request" href="https://instagram.com/al_najah_hub" target="_blank">
+<i class="fab fa-instagram"></i> طلب تصميم خاص بسعر معين
+                            </a>
+</div>
+</div>
+</div>
+</div>
+<!-- Custom Request Banner -->
+<div class="glass custom-project-banner">
+<div class="banner-text">
+<h3 data-lang-ar="هل ترغب ببرمجة موقع أو مؤثرات خاصة لمشروعك؟" data-lang-en="Would you like to program a website or special effects for your project?"><i class="fas fa-lightbulb text-gold"></i> هل ترغب ببرمجة موقع أو مؤثرات خاصة لمشروعك؟</h3>
+<p data-lang-ar="نقوم بتطوير وتصميم المواقع، صفحات الهبوط، اللوحات التفاعلية، والتأثيرات البرمجية الخاصة حسب رغبتك ومواصفاتك. التواصل والطلب متاح حصراً عبر الانستقرام." data-lang-en="We develop and design websites, landing pages, interactive dashboards, and special programming effects according to your desire and specifications. Communication and ordering available exclusively via Instagram.">نقوم بتطوير وتصميم المواقع، صفحات الهبوط، اللوحات التفاعلية، والتأثيرات البرمجية الخاصة حسب رغبتك ومواصفاتك. التواصل والطلب متاح حصراً عبر الانستقرام.</p>
+</div>
+<a class="btn btn-insta banner-btn" data-lang-ar="اطلب موقعك عبر الانستقرام" data-lang-en="Order your website via Instagram" href="https://instagram.com/al_najah_hub" target="_blank">
+<i class="fab fa-instagram"></i> اطلب موقعك عبر الانستقرام
+                </a>
+</div>
+</section>
+<!-- ============================================================ -->
+<!-- SERVICES SECTION 1: PROGRAMMING & TECH SOLUTIONS -->
+<!-- ============================================================ -->
+<section class="reveal" id="tech-services">
+<div class="section-header">
+<span class="section-badge tech-badge"><i class="fas fa-laptop-code"></i><span data-lang-ar="قطاع البرمجة" data-lang-en="Tech Sector">قطاع البرمجة</span></span>
+<h2><span data-lang-ar="خدمات البرمجة والحلول التقنية" data-lang-en="Programming &amp; Tech Solutions Services">خدمات البرمجة والحلول التقنية</span></h2>
+<p><span data-lang-ar="حلول رقمية وتطوير ويب متقن للشركات والأفراد والمشاريع الريادية" data-lang-en="Digital solutions and seamless web development for companies, individuals, and startups">حلول رقمية وتطوير ويب متقن للشركات والأفراد والمشاريع الريادية</span></p>
+</div>
+<div class="services-grid">
+<div class="glass service-card tech-service">
+<div class="service-icon-box tech-box">
+<i class="fas fa-globe"></i>
+</div>
+<h3><span data-lang-ar="تطوير المواقع والمنصات المخصصة" data-lang-en="Custom Website &amp; Platform Development">تطوير المواقع والمنصات المخصصة</span></h3>
+<p><span data-lang-ar="تصميم وبرمجة مواقع الشركات، المعارض الشخصية (Portfolio)، المتاجر الإلكترونية، وصفحات الهبوط العصرية المتوافقة مع جميع الأجهزة ومحركات البحث." data-lang-en="Designing and programming corporate websites, portfolios, e-commerce stores, and modern landing pages compatible with all devices and SEO.">تصميم وبرمجة مواقع الشركات، المعارض الشخصية (Portfolio)، المتاجر الإلكترونية، وصفحات الهبوط العصرية المتوافقة مع جميع الأجهزة ومحركات البحث.</span></p>
+<ul class="service-points">
+<li data-lang-ar="متجاوبة بالكامل (Responsive UI)" data-lang-en="Fully Responsive (Responsive UI)"><i class="fas fa-check"></i> متجاوبة بالكامل (Responsive UI)</li>
+<li data-lang-ar="سرعة تحميل فائقة وتوافق SEO" data-lang-en="Ultra-fast loading speed and SEO compatibility"><i class="fas fa-check"></i> سرعة تحميل فائقة وتوافق SEO</li>
+<li data-lang-ar="سورس كود منظم ونظيف 100%" data-lang-en="100% organized and clean source code"><i class="fas fa-check"></i> سورس كود منظم ونظيف 100%</li>
+</ul>
+</div>
+<div class="glass service-card tech-service">
+<div class="service-icon-box tech-box">
+<i class="fas fa-cubes"></i>
+</div>
+<h3><span data-lang-ar="مواقع تفاعلية ومؤثرات 3D و WebGL" data-lang-en="Interactive 3D &amp; WebGL Sites">مواقع تفاعلية ومؤثرات 3D و WebGL</span></h3>
+<p><span data-lang-ar="برمجة صفحات ويب ومؤثرات بصرية تفاعلية ثلاثية الأبعاد (Three.js / Canvas) تجذب العملاء وتمنح مشروعك هوية تقنية مبهرة وفريدة." data-lang-en="Programming 3D interactive web pages and visual effects (Three.js / Canvas) that attract customers and give your project a stunning unique identity.">برمجة صفحات ويب ومؤثرات بصرية تفاعلية ثلاثية الأبعاد (Three.js / Canvas) تجذب العملاء وتمنح مشروعك هوية تقنية مبهرة وفريدة.</span></p>
+<ul class="service-points">
+<li data-lang-ar="تفاعل مرن مع الماوس واللمس" data-lang-en="Flexible interaction with mouse and touch"><i class="fas fa-check"></i> تفاعل مرن مع الماوس واللمس</li>
+<li data-lang-ar="أداء سلس على مختلف الأجهزة" data-lang-en="Smooth performance on various devices"><i class="fas fa-check"></i> أداء سلس على مختلف الأجهزة</li>
+<li data-lang-ar="أفكار مبتكرة وتصميم استثنائي" data-lang-en="Innovative ideas and exceptional design"><i class="fas fa-check"></i> أفكار مبتكرة وتصميم استثنائي</li>
+</ul>
+</div>
+<div class="glass service-card tech-service">
+<div class="service-icon-box tech-box">
+<i class="fas fa-chart-line"></i>
+</div>
+<h3><span data-lang-ar="لوحات التحكم والأنظمة الإدارية" data-lang-en="Dashboards &amp; Admin Systems">لوحات التحكم والأنظمة الإدارية</span></h3>
+<p><span data-lang-ar="بناء لوحات تحكم ديناميكية (Dashboards) لإدارة البيانات، المحتوى، العملاء، والعمليات مع إحصائيات بيانية ورسوم تفاعلية منظمة." data-lang-en="Building dynamic dashboards to manage data, content, customers, and operations with interactive statistics and charts.">بناء لوحات تحكم ديناميكية (Dashboards) لإدارة البيانات، المحتوى، العملاء، والعمليات مع إحصائيات بيانية ورسوم تفاعلية منظمة.</span></p>
+<ul class="service-points">
+<li data-lang-ar="واجهات مستخدم مريحة وعملية" data-lang-en="Comfortable and practical user interfaces"><i class="fas fa-check"></i> واجهات مستخدم مريحة وعملية</li>
+<li data-lang-ar="رسوم بيانية وتتبع فوري للمهام" data-lang-en="Charts and real-time task tracking"><i class="fas fa-check"></i> رسوم بيانية وتتبع فوري للمهام</li>
+<li data-lang-ar="هيكلة برمجية آمنة وسهلة التوسيع" data-lang-en="Secure and easily expandable programming architecture"><i class="fas fa-check"></i> هيكلة برمجية آمنة وسهلة التوسيع</li>
+</ul>
+</div>
+<div class="glass service-card tech-service">
+<div class="service-icon-box tech-box">
+<i class="fas fa-bug"></i>
+</div>
+<h3><span data-lang-ar="صيانة وتطوير وتحسين الأكواد البرمجية" data-lang-en="Code Maintenance &amp; Optimization">صيانة وتطوير وتحسين الأكواد البرمجية</span></h3>
+<p><span data-lang-ar="فحص الأخطاء (Debugging)، حل مشاكل التصميم والبرمجة، تسريع أداء المواقع، وإعادة كتابة الأكواد وتحديثها بأحدث المعايير البرمجية." data-lang-en="Debugging, fixing design issues, speeding up websites, and rewriting code to meet modern programming standards.">فحص الأخطاء (Debugging)، حل مشاكل التصميم والبرمجة، تسريع أداء المواقع، وإعادة كتابة الأكواد وتحديثها بأحدث المعايير البرمجية.</span></p>
+<ul class="service-points">
+<li data-lang-ar="كشف الأخطاء وإصلاحها بدقة" data-lang-en="Accurate error detection and fixing"><i class="fas fa-check"></i> كشف الأخطاء وإصلاحها بدقة</li>
+<li data-lang-ar="تحسين التصميم وتجربة المستخدم" data-lang-en="Improving design and user experience"><i class="fas fa-check"></i> تحسين التصميم وتجربة المستخدم</li>
+<li data-lang-ar="دعم واستشارات تقنية مباشرة" data-lang-en="Direct Technical Support and Consultations"><i class="fas fa-check"></i> دعم واستشارات تقنية مباشرة</li>
+</ul>
+</div>
+</div>
+</section>
+<!-- ============================================================ -->
+<!-- SERVICES SECTION 2: ACADEMIC RESEARCH & REPORTS -->
+<!-- ============================================================ -->
+<section class="reveal" id="academic-services">
+<div class="section-header">
+<span class="section-badge academic-badge"><i class="fas fa-graduation-cap"></i><span data-lang-ar="قطاع البحوث" data-lang-en="Research Sector">قطاع البحوث</span></span>
+<h2><span data-lang-ar="خدمات البحوث والتقارير الجامعية" data-lang-en="Academic Research &amp; Reports Services">خدمات البحوث والتقارير الجامعية</span></h2>
+<p><span data-lang-ar="حلول أكاديمية رصينة ومتقنة لطلبة الكليات والدراسات العليا في جميع المحافظات العراقية" data-lang-en="Reliable academic solutions for college and postgraduate students across all Iraqi governorates.">حلول أكاديمية رصينة ومتقنة لطلبة الكليات والدراسات العليا في جميع المحافظات العراقية</span></p>
+</div>
+<div class="services-grid">
+<div class="glass service-card academic-service">
+<div class="service-icon-box academic-box">
+<i class="fas fa-book-reader"></i>
+</div>
+<h3><span data-lang-ar="إعداد البحوث الأكاديمية الرصينة" data-lang-en="Preparation of Reliable Academic Research">إعداد البحوث الأكاديمية الرصينة</span></h3>
+<p><span data-lang-ar="كتابة وبناء بحوث علمية متكاملة تتضمن مقدمة، منهجية، استنتاجات، وتوثيق المصادر والمراجع العربية والأجنبية وفق المعايير الأكاديمية المعتمدة." data-lang-en="Writing comprehensive scientific research including introduction, methodology, conclusion, and proper citations.">كتابة وبناء بحوث علمية متكاملة تتضمن مقدمة، منهجية، استنتاجات، وتوثيق المصادر والمراجع العربية والأجنبية وفق المعايير الأكاديمية المعتمدة.</span></p>
+<ul class="service-points">
+<li data-lang-ar="خالية من الانتحال والنسخ العشوائي" data-lang-en="Free from plagiarism and random copying"><i class="fas fa-check"></i> خالية من الانتحال والنسخ العشوائي</li>
+<li data-lang-ar="مراجع معتمدة من مصادر موثوقة" data-lang-en="Approved references from reliable sources"><i class="fas fa-check"></i> مراجع معتمدة من مصادر موثوقة</li>
+<li data-lang-ar="تدقيق لغوي وإملائي شامل" data-lang-en="Comprehensive proofreading and spell checking"><i class="fas fa-check"></i> تدقيق لغوي وإملائي شامل</li>
+</ul>
+</div>
+<div class="glass service-card academic-service">
+<div class="service-icon-box academic-box">
+<i class="fas fa-file-invoice"></i>
+</div>
+<h3><span data-lang-ar="كتابة وتنسيق التقارير الجامعية" data-lang-en="Writing &amp; Formatting University Reports">كتابة وتنسيق التقارير الجامعية</span></h3>
+<p><span data-lang-ar="إعداد محتوى التقارير لجميع المواد والتخصصات الجامعية (هندسة، طب، صيدلة، علوم، إدارة، قانون) بتنسيق أنيق جاهز للطباعة والتقديم المباشر." data-lang-en="Preparing report content for all university subjects (engineering, medicine, science, law) in an elegant format ready for direct submission.">إعداد محتوى التقارير لجميع المواد والتخصصات الجامعية (هندسة، طب، صيدلة، علوم، إدارة، قانون) بتنسيق أنيق جاهز للطباعة والتقديم المباشر.</span></p>
+<ul class="service-points">
+<li data-lang-ar="تسليم سريع خلال ساعات للطلبات العاجلة" data-lang-en="Fast delivery within hours for urgent orders"><i class="fas fa-check"></i> تسليم سريع خلال ساعات للطلبات العاجلة</li>
+<li data-lang-ar="صيغة PDF ملونة وصيغة Word قابلة للتعديل" data-lang-en="Colored PDF and editable Word format"><i class="fas fa-check"></i> صيغة PDF ملونة وصيغة Word قابلة للتعديل</li>
+<li data-lang-ar="غلاف تقرير رسمي معتمد ومجاني" data-lang-en="Free certified official report cover"><i class="fas fa-check"></i> غلاف تقرير رسمي معتمد ومجاني</li>
+</ul>
+</div>
+<div class="glass service-card academic-service">
+<div class="service-icon-box academic-box">
+<i class="fas fa-robot"></i>
+</div>
+<h3 data-lang-ar="بوت تصميم الأغلفة الذكي (@InstantReportsBot)" data-lang-en="Smart Cover Design Bot (@InstantReportsBot)">بوت تصميم الأغلفة الذكي (@InstantReportsBot)</h3>
+<p data-lang-ar="بوت تلجرام فوري ومجاني يتيح للطالب إنشاء واجهة تقرير رسمية بأعلى جودة مع شعار جامعته ومعلوماته في ثوانٍ معدودة وبدون أي عناء." data-lang-en="An instant and free Telegram bot that allows the student to create an official report cover with the highest quality, university logo, and information in seconds without any hassle.">بوت تلجرام فوري ومجاني يتيح للطالب إنشاء واجهة تقرير رسمية بأعلى جودة مع شعار جامعته ومعلوماته في ثوانٍ معدودة وبدون أي عناء.</p>
+<ul class="service-points">
+<li data-lang-ar="تصميم فوري تلقائي خلال ثوانٍ" data-lang-en="Instant automatic design within seconds"><i class="fas fa-check"></i> تصميم فوري تلقائي خلال ثوانٍ</li>
+<li data-lang-ar="يدعم كافة الجامعات والكليات والمعاهد" data-lang-en="Supports all universities, colleges, and institutes"><i class="fas fa-check"></i> يدعم كافة الجامعات والكليات والمعاهد</li>
+<li data-lang-ar="جودة تصدير فائقة الدقة" data-lang-en="Ultra-high resolution export quality"><i class="fas fa-check"></i> جودة تصدير فائقة الدقة</li>
+</ul>
+</div>
+<div class="glass service-card academic-service">
+<div class="service-icon-box academic-box">
+<i class="fas fa-file-powerpoint"></i>
+</div>
+<h3 data-lang-ar="العروض التقديمية الاحترافية (PowerPoint)" data-lang-en="Professional Presentations (PowerPoint)">العروض التقديمية الاحترافية (PowerPoint)</h3>
+<p data-lang-ar="تصميم عروض تقديمية مميزة للسمنار (Seminars) والتقارير الجامعية بتنسيقات عصرية وأيقونات بيانية وانتقالات تجذب انتباه الأساتذة والحضور." data-lang-en="Designing unique presentations for seminars and university reports with modern formats, data icons, and transitions that attract the attention of professors and attendees.">تصميم عروض تقديمية مميزة للسمنار (Seminars) والتقارير الجامعية بتنسيقات عصرية وأيقونات بيانية وانتقالات تجذب انتباه الأساتذة والحضور.</p>
+<ul class="service-points">
+<li data-lang-ar="تصاميم مخصصة وجذابة" data-lang-en="Custom and attractive designs"><i class="fas fa-check"></i> تصاميم مخصصة وجذابة</li>
+<li data-lang-ar="دعم الحركات وتلخيص النقاط المهمة" data-lang-en="Support for animations and summarizing key points"><i class="fas fa-check"></i> دعم الحركات وتلخيص النقاط المهمة</li>
+<li data-lang-ar="جاهز للعرض والمناقشة فوراً" data-lang-en="Ready for presentation and discussion immediately"><i class="fas fa-check"></i> جاهز للعرض والمناقشة فوراً</li>
+</ul>
+</div>
+</div>
+</section>
+<!-- University Badges (Partners) Section -->
+<section class="reveal" id="partners">
+<div class="partners-header">
+<h3 data-lang-ar="يثق بنا طلاب ومطورو كبرى الجامعات العراقية" data-lang-en="Trusted by students and developers of major Iraqi universities">يثق بنا طلاب ومطورو كبرى الجامعات العراقية</h3>
+</div>
+<div class="partners-grid">
+<div class="partner-logo">
+<img alt="University of Baghdad" loading="lazy" src="images/uni_baghdad.png"/>
+<span data-lang-ar="جامعة بغداد" data-lang-en="University of Baghdad">جامعة بغداد</span>
+</div>
+<div class="partner-logo">
+<img alt="Al-Mustansiriya University" loading="lazy" src="images/uni_mustansiriyah.png"/>
+<span data-lang-ar="جامعة المستنصرية" data-lang-en="Al-Mustansiriya University">جامعة المستنصرية</span>
+</div>
+<div class="partner-logo">
+<img alt="University of Technology" loading="lazy" src="images/uni_tech.png"/>
+<span data-lang-ar="الجامعة التكنولوجية" data-lang-en="University of Technology">الجامعة التكنولوجية</span>
+</div>
+<div class="partner-logo">
+<img alt="University of Basrah" loading="lazy" src="images/uni_basra.png"/>
+<span data-lang-ar="جامعة البصرة" data-lang-en="University of Basrah">جامعة البصرة</span>
+</div>
+</div>
+</section>
+<!-- Academic Portfolio Models -->
+<section class="reveal" id="portfolio">
+<div class="section-header">
+<span class="section-badge" data-lang-ar="نماذج الأغلفة" data-lang-en="Cover Models"><i class="fas fa-images"></i> نماذج الأغلفة</span>
+<h2 data-lang-ar="نماذج من الواجهات والأغلفة الأكاديمية" data-lang-en="Samples of Academic Covers and Interfaces">نماذج من الواجهات والأغلفة الأكاديمية</h2>
+<p data-lang-ar="عينات معتمدة تم تصميمها وتنفيذها لطلاب مختلف الكليات" data-lang-en="Approved samples designed and implemented for students of various colleges">عينات معتمدة تم تصميمها وتنفيذها لطلاب مختلف الكليات</p>
+</div>
+<div class="portfolio-slider">
+<div class="portfolio-track">
+<div class="portfolio-item">
+<img alt="تقرير جامعي رسمي" loading="lazy" src="images/cover1.png"/>
+<div class="portfolio-overlay">
+<span data-lang-ar="واجهة تقرير رسمي معتمد" data-lang-en="Official certified report cover">واجهة تقرير رسمي معتمد</span>
+</div>
+</div>
+<div class="portfolio-item">
+<img alt="غلاف بحث أكاديمي" loading="lazy" src="images/cover2.png"/>
+<div class="portfolio-overlay">
+<span data-lang-ar="غلاف بحث رصين" data-lang-en="Solid research cover">غلاف بحث رصين</span>
+</div>
+</div>
+<div class="portfolio-item">
+<img alt="عرض تقديمي" loading="lazy" src="images/cover3.png"/>
+<div class="portfolio-overlay">
+<span data-lang-ar="عرض تقديمي (PowerPoint)" data-lang-en="Presentation (PowerPoint)">عرض تقديمي (PowerPoint)</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ============================================================ -->
+<!-- PRICING SECTION: DUAL TABS (TECH & ACADEMIC) -->
+<!-- ============================================================ -->
+<section class="reveal" id="pricing">
+<div class="section-header">
+<span class="section-badge"><i class="fas fa-tags"></i><span data-lang-ar="باقات الأسعار" data-lang-en="Pricing Plans">باقات الأسعار</span></span>
+<h2><span data-lang-ar="باقات واضحة ومناسبة للجميع" data-lang-en="Clear and affordable plans for everyone">باقات واضحة ومناسبة للجميع</span></h2>
+<p data-lang-ar="اختر المجال المطلوب للاطلاع على تفاصيل الأسعار والعروض التوفيرية (الطلب عبر الانستقرام فقط)" data-lang-en="Choose the required field to see pricing details and saving offers (Order via Instagram only)">اختر المجال المطلوب للاطلاع على تفاصيل الأسعار والعروض التوفيرية (الطلب عبر الانستقرام فقط)</p>
+</div>
+<!-- Pricing Tabs Switcher Removed as per user request -->
+<!-- 1. ACADEMIC PRICING -->
+<div class="pricing-content-panel active" id="academic-pricing">
+<div class="pricing-grid">
+<!-- Standard Report -->
+<div class="glass price-card">
+<div class="card-plan-header">
+<h4><span data-lang-ar="تقرير قياسي" data-lang-en="Standard Report">تقرير قياسي</span></h4>
+<span class="plan-sub"><span data-lang-ar="بدون ذكر مصادر" data-lang-en="No Citations">بدون ذكر مصادر</span></span>
+</div>
+<div class="price-amount">3,000 <span data-lang-ar="د.ع" data-lang-en="IQD">د.ع</span></div>
+<ul class="feature-list">
+<li><i class="fas fa-check-circle"></i><span data-lang-ar="محتوى كامل ومرتب للمادة" data-lang-en="Full and organized content for the subject">محتوى كامل ومرتب للمادة</span></li>
+<li><i class="fas fa-check-circle"></i><span data-lang-ar="جاهز للتقديم مباشرة بصيغة PDF" data-lang-en="Ready for direct submission in PDF">جاهز للتقديم مباشرة بصيغة PDF</span></li>
+<li><i class="fas fa-check-circle"></i><span data-lang-ar="غلاف رسمي باسم الطالب وكليته" data-lang-en="Official cover with student and college name">غلاف رسمي باسم الطالب وكليته</span></li>
+<li><i class="fas fa-times-circle text-red"></i><span data-lang-ar="لا يتضمن قائمة مصادر موثقة" data-lang-en="Does not include a list of documented sources">لا يتضمن قائمة مصادر موثقة</span></li>
+</ul>
+<a class="btn btn-insta" data-lang-ar="اطلب عبر الانستقرام" data-lang-en="Order via Instagram" href="https://instagram.com/al_najah_hub" target="_blank">
+                            اطلب عبر الانستقرام <i class="fab fa-instagram"></i>
+</a>
+</div>
+<!-- Best Offer (Double Report) -->
+<div class="glass price-card popular">
+<div class="popular-ribbon" data-lang-ar="أقوى عرض توفيري" data-lang-en="Best Saving Offer">أقوى عرض توفيري</div>
+<div class="card-plan-header">
+<h4><span data-lang-ar="عرض التقريرين" data-lang-en="Double Report Offer">عرض التقريرين</span></h4>
+<span class="plan-sub"><span data-lang-ar="تقريرين لمادتين مختلفتين" data-lang-en="Two reports for two different subjects">تقريرين لمادتين مختلفتين</span></span>
+</div>
+<div class="price-amount">5,000 <span data-lang-ar="د.ع" data-lang-en="IQD">د.ع</span></div>
+<ul class="feature-list">
+<li><i class="fas fa-check-circle"></i><span data-lang-ar="تقريرين كاملين لأي مادتين دراسيتين" data-lang-en="Two full reports for any two subjects">تقريرين كاملين لأي مادتين دراسيتين</span></li>
+<li><i class="fas fa-check-circle"></i><span data-lang-ar="غلاف احترافي مجاني لكل تقرير" data-lang-en="Free professional cover for each report">غلاف احترافي مجاني لكل تقرير</span></li>
+<li><i class="fas fa-check-circle"></i><span data-lang-ar="تنسيق عالي الجودة جاهز للتسليم" data-lang-en="High-quality formatting ready for delivery">تنسيق عالي الجودة جاهز للتسليم</span></li>
+<li><i class="fas fa-check-circle"></i><span data-lang-ar="توفير مؤكد لمبلغ 1,000 دينار" data-lang-en="Guaranteed saving of 1,000 IQD">توفير مؤكد لمبلغ 1,000 دينار</span></li>
+</ul>
+<a class="btn btn-orange" data-lang-ar="احجز العرض عبر الانستقرام" data-lang-en="Book the offer via Instagram" href="https://instagram.com/al_najah_hub" target="_blank">
+                            احجز العرض عبر الانستقرام <i class="fab fa-instagram"></i>
+</a>
+</div>
+<!-- VIP Academic Report -->
+<div class="glass price-card vip-card">
+<div class="card-plan-header">
+<h4 class="text-gold"><i class="fas fa-crown"></i><span data-lang-ar="تقرير VIP كامل" data-lang-en="Full VIP Report">تقرير VIP كامل</span></h4>
+<span class="plan-sub"><span data-lang-ar="بالمصادر والتوثيق الأكاديمي" data-lang-en="With Citations &amp; Academic Documentation">بالمصادر والتوثيق الأكاديمي</span></span>
+</div>
+<div class="price-amount">5,000 <span data-lang-ar="د.ع" data-lang-en="IQD">د.ع</span></div>
+<ul class="feature-list">
+<li><i class="fas fa-check-circle"></i><span data-lang-ar="تنسيق أكاديمي رصين ومفصل جداً" data-lang-en="Rigorous and highly detailed academic formatting">تنسيق أكاديمي رصين ومفصل جداً</span></li>
+<li><i class="fas fa-check-circle"></i><span data-lang-ar="ذكر المصادر والمراجع المعتمدة كاملة" data-lang-en="Full citations and approved references">ذكر المصادر والمراجع المعتمدة كاملة</span></li>
+<li><i class="fas fa-check-circle"></i><span data-lang-ar="واجهة وتنسيق احترافي منسجم مع كليتك" data-lang-en="Professional cover and formatting tailored to your college">واجهة وتنسيق احترافي منسجم مع كليتك</span></li>
+<li><i class="fas fa-check-circle"></i><span data-lang-ar="أولوية قصوى في سرعة التسليم" data-lang-en="Top priority for fast delivery">أولوية قصوى في سرعة التسليم</span></li>
+</ul>
+<a class="btn btn-insta" data-lang-ar="طلب باقة VIP عبر الانستقرام" data-lang-en="Request VIP plan via Instagram" href="https://instagram.com/al_najah_hub" target="_blank">
+                            طلب باقة VIP عبر الانستقرام <i class="fab fa-instagram"></i>
+</a>
+</div>
+</div>
+</div>
+<!-- 2. TECH PRICING (REMOVED) -->
+</section>
+<!-- Timeline / How it Works Section -->
+<section class="reveal" id="how-it-works">
+<div class="section-header">
+<span class="section-badge"><i class="fas fa-tasks"></i><span data-lang-ar="آلية العمل" data-lang-en="How it Works">آلية العمل</span></span>
+<h2><span data-lang-ar="كيف نضمن لك عملاً احترافياً؟" data-lang-en="How do we ensure professional work?">كيف نضمن لك عملاً احترافياً؟</span></h2>
+<p><span data-lang-ar="خطوات بسيطة تضمن استلام مشروعك البرمجي أو تقريرك الجامعي بأعلى جودة" data-lang-en="Simple steps to ensure receiving your tech project or academic report with the highest quality.">خطوات بسيطة تضمن استلام مشروعك البرمجي أو تقريرك الجامعي بأعلى جودة</span></p>
+</div>
+<div class="timeline">
+<div class="timeline-item right">
+<div class="timeline-content glass">
+<span class="step-number">01</span>
+<h3 data-lang-ar="1. اختيار الخدمة أو الكود" data-lang-en="1. Choose the Service or Code">1. اختيار الخدمة أو الكود</h3>
+<p data-lang-ar="تصفح مشروع السورس كود المعروض للتحميل المباشر، أو حدد الخدمة الأكاديمية أو البرمجية التي تحتاجها." data-lang-en="Browse the source code project offered for direct download, or specify the academic or programming service you need.">تصفح مشروع السورس كود المعروض للتحميل المباشر، أو حدد الخدمة الأكاديمية أو البرمجية التي تحتاجها.</p>
+</div>
+</div>
+<div class="timeline-item left">
+<div class="timeline-content glass">
+<span class="step-number">02</span>
+<h3 data-lang-ar="2. التواصل والطلب عبر الانستقرام" data-lang-en="2. Contact and Order via Instagram">2. التواصل والطلب عبر الانستقرام</h3>
+<p data-lang-ar="راسلنا عبر حساب الانستقرام الرسمي (@al_najah_hub) موضحاً المتطلبات والملاحظات والموعد المحدد." data-lang-en="Message us via our official Instagram account (@al_najah_hub) detailing the requirements, notes, and the specified deadline.">راسلنا عبر حساب الانستقرام الرسمي (@al_najah_hub) موضحاً المتطلبات والملاحظات والموعد المحدد.</p>
+</div>
+</div>
+<div class="timeline-item right">
+<div class="timeline-content glass">
+<span class="step-number">03</span>
+<h3 data-lang-ar="3. المعاينة المباشرة والتأكد" data-lang-en="3. Live Preview and Verification">3. المعاينة المباشرة والتأكد</h3>
+<p data-lang-ar="نرسل لك رابط معاينة حية للمشروع البرمجي، أو نسخة أولية من التقرير للمراجعة والتأكد التام من الجودة." data-lang-en="We send you a live preview link for the programming project, or a preliminary version of the report for review and full quality assurance.">نرسل لك رابط معاينة حية للمشروع البرمجي، أو نسخة أولية من التقرير للمراجعة والتأكد التام من الجودة.</p>
+</div>
+</div>
+<div class="timeline-item left">
+<div class="timeline-content glass">
+<span class="step-number">04</span>
+<h3 data-lang-ar="4. الدفع الآمن واستلام الكود والملفات" data-lang-en="4. Secure Payment and Receiving Code/Files">4. الدفع الآمن واستلام الكود والملفات</h3>
+<p data-lang-ar="بعد رضاك عن العمل، يتم الدفع عبر وسيلتك المفضلة (زين كاش، آسيا حوالة، ماستر كارد) واستلام الكود أو الملفات فوراً." data-lang-en="After you are satisfied with the work, payment is made via your preferred method (Zain Cash, AsiaHawala, MasterCard) and the code or files are received immediately.">بعد رضاك عن العمل، يتم الدفع عبر وسيلتك المفضلة (زين كاش، آسيا حوالة، ماستر كارد) واستلام الكود أو الملفات فوراً.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="reveal" id="faq">
+<div class="section-header">
+<span class="section-badge"><i class="fas fa-question-circle"></i><span data-lang-ar="الأسئلة الشائعة" data-lang-en="FAQ">الأسئلة الشائعة</span></span>
+<h2><span data-lang-ar="الأسئلة المكررة" data-lang-en="Frequently Asked Questions">الأسئلة المكررة</span></h2>
+<p><span data-lang-ar="إجابات واضحة عن الكود البرمجي، آلية الطلب، وطرق الدفع والضمانات" data-lang-en="Clear answers about source code, ordering process, payment methods, and guarantees.">إجابات واضحة عن الكود البرمجي، آلية الطلب، وطرق الدفع والضمانات</span></p>
+</div>
+<div class="faq-grid">
+<!-- FAQ 1: Source Code -->
+<div class="glass faq-item" onclick="toggleFaq(this)">
+<div class="faq-question">
+<span data-lang-ar="هل سورس كود مشروع Love You متاح للتحميل مجاناً؟" data-lang-en="Is the Love You project source code available for free download?"><i class="fas fa-code text-cyan"></i> هل سورس كود مشروع Love You متاح للتحميل مجاناً؟</span>
+<i class="fas fa-plus toggle-icon"></i>
+</div>
+<div class="faq-answer" data-lang-ar="نعم بالتأكيد! يمكنك تجربة المشروع حياً في المتصفح، أو تحميل ملف الـ ZIP المضغوط أو ملف `love.html` المباشر مجاناً بدون أي قيود، والتعديل عليه كما تحب." data-lang-en="Yes, absolutely! You can try the project live in the browser, or download the compressed ZIP file or the direct `love.html` file for free without any restrictions, and modify it as you like.">
+                        نعم بالتأكيد! يمكنك تجربة المشروع حياً في المتصفح، أو تحميل ملف الـ ZIP المضغوط أو ملف `love.html` المباشر مجاناً بدون أي قيود، والتعديل عليه كما تحب.
+                    </div>
+</div>
+<!-- FAQ 2: Custom Coding & Ordering -->
+<div class="glass faq-item" onclick="toggleFaq(this)">
+<div class="faq-question">
+<span data-lang-ar="كيف أطلب موقعاً برمجياً أو فكرة مخصصة؟" data-lang-en="How do I order a programming website or a custom idea?"><i class="fas fa-laptop-code text-cyan"></i> كيف أطلب موقعاً برمجياً أو فكرة مخصصة؟</span>
+<i class="fas fa-plus toggle-icon"></i>
+</div>
+<div class="faq-answer">
+                        الطلب والاستفسار يتم حصراً وبشكل مباشر عبر حسابنا الرسمي على الانستقرام <b>@al_najah_hub</b>. راسلنا بفكرتك أو متطلبات موقعك وسنقوم بالرد عليك وتقديم أفضل الحلول البرمجية.
+                    </div>
+</div>
+<!-- FAQ 3: Payment Methods -->
+<div class="glass faq-item" onclick="toggleFaq(this)">
+<div class="faq-question">
+<span data-lang-ar="ما هي طرق الدفع المعتمدة داخل العراق؟" data-lang-en="What are the approved payment methods inside Iraq?"><i class="fas fa-wallet text-cyan"></i> ما هي طرق الدفع المعتمدة داخل العراق؟</span>
+<i class="fas fa-plus toggle-icon"></i>
+</div>
+<div class="faq-answer">
+                        نوفر وسائل الدفع الأكثر أماناً وسهولة للطلاب والعملاء في كافة محافظات العراق:
+                        <br/>• <b data-lang-ar="محفظة زين كاش (Zain Cash)" data-lang-en="Zain Cash Wallet">محفظة زين كاش (Zain Cash)</b> - تحويل مباشر.
+                        <br/>• <b data-lang-ar="آسيا حوالة (Asiacell)" data-lang-en="AsiaHawala (Asiacell)">آسيا حوالة (Asiacell)</b> - تحويل محفظة أو رصيد.
+                        <br/>• <b data-lang-ar="بطاقات الماستر كارد" data-lang-en="Mastercards">بطاقات الماستر كارد</b> والتحويلات المصرفية.
+                    </div>
+</div>
+<!-- FAQ 4: Academic Delivery & Watermark -->
+<div class="glass faq-item" onclick="toggleFaq(this)">
+<div class="faq-question">
+<span data-lang-ar="ما هي آلية تسليم التقارير والبحوث وضمان حقي؟" data-lang-en="What is the delivery mechanism for reports and research to guarantee my rights?"><i class="fas fa-shield-alt text-cyan"></i> ما هي آلية تسليم التقارير والبحوث وضمان حقي؟</span>
+<i class="fas fa-plus toggle-icon"></i>
+</div>
+<div class="faq-answer">
+                        نعتمد مبدأ الشفافية والأمان الكامل:
+                        <br/>1. بعد إنجاز التقرير أو البحث، نرسل لك <b data-lang-ar="نسخة أولية كاملة للمعاينة والتأكد من المحتوى" data-lang-en="Complete preliminary version for preview and content verification">نسخة أولية كاملة للمعاينة والتأكد من المحتوى</b>.
+                        <br/>2. بعد تأكدك من دقة التقرير ومطابقته لطلبك، يتم إرسال المبلغ المتفق عليه.
+                        <br/>3. فور استلام الدفع، يُرسل الملف النهائي الأصلي والجاهز للطباعة والتقديم بصيغتي PDF و Word.
+                    </div>
+</div>
+<!-- FAQ 5: Bot vs Custom Service -->
+<div class="glass faq-item" onclick="toggleFaq(this)">
+<div class="faq-question">
+<span data-lang-ar="ما هو الفرق بين بوت التلجرام وخدمة كتابة التقارير الكاملة؟" data-lang-en="What is the difference between the Telegram bot and the full report writing service?"><i class="fas fa-robot text-cyan"></i> ما هو الفرق بين بوت التلجرام وخدمة كتابة التقارير الكاملة؟</span>
+<i class="fas fa-plus toggle-icon"></i>
+</div>
+<div class="faq-answer">
+                        بوت التلجرام <b>@InstantReportsBot</b> هو أداة ذكية مخصصة لتصميم واجهة التقرير (الغلاف الرسمي) مجاناً وبشكل فوري. أما كتابة محتوى التقارير بالكامل والبحوث الموثقة فتتم عبر مراسلتنا على الانستقرام لاختيار الباقة المناسبة.
+                    </div>
+</div>
+<!-- FAQ 6: Free Revisions -->
+<div class="glass faq-item" onclick="toggleFaq(this)">
+<div class="faq-question">
+<span data-lang-ar="هل تقدمون تعديلات مجانية بعد الاستلام؟" data-lang-en="Do you offer free modifications after delivery?"><i class="fas fa-redo text-cyan"></i> هل تقدمون تعديلات مجانية بعد الاستلام؟</span>
+<i class="fas fa-plus toggle-icon"></i>
+</div>
+<div class="faq-answer" data-lang-ar="نعم بكل تأكيد! رضاكم هو أولويتنا الأولى، ونوفر خدمة التعديلات والمراجعات المجانية في حال وجود أي ملاحظة فنية أو تعديل على المحتوى الأكاديمي أو البرمجي." data-lang-en="Yes, absolutely! Your satisfaction is our top priority, and we provide free modifications and revisions in case of any technical note or adjustment to the academic or programming content.">
+                        نعم بكل تأكيد! رضاكم هو أولويتنا الأولى، ونوفر خدمة التعديلات والمراجعات المجانية في حال وجود أي ملاحظة فنية أو تعديل على المحتوى الأكاديمي أو البرمجي.
+                    </div>
+</div>
+</div>
+</section>
+<!-- Privacy & Code Quality Guarantee Section -->
+<section class="reveal" id="privacy">
+<div class="glass guarantee-box">
+<div class="guarantee-icon-wrap">
+<i class="fas fa-user-shield"></i>
+</div>
+<h2 data-lang-ar="ضمان الخصوصية ونظافة الكود 100%" data-lang-en="100% Privacy and Clean Code Guarantee">ضمان الخصوصية ونظافة الكود 100%</h2>
+<p data-lang-ar="نتعهد بحماية كامل بياناتك وأعمالك الأكاديمية والشخصية. يتم حذف جميع ملفات الطلاب تلقائياً بعد استلام العمل، كما نضمن أن الأكواد البرمجية أصلية، نظيفة، وغير منسوخة عشوائياً." data-lang-en="We pledge to fully protect your data and academic and personal work. All student files are automatically deleted after receiving the work, and we guarantee that the programming codes are original, clean, and not randomly copied.">
+                    نتعهد بحماية كامل بياناتك وأعمالك الأكاديمية والشخصية. يتم حذف جميع ملفات الطلاب تلقائياً بعد استلام العمل، كما نضمن أن الأكواد البرمجية أصلية، نظيفة، وغير منسوخة عشوائياً.
+                </p>
+<div class="guarantee-badges-grid">
+<span class="privacy-badge" data-lang-ar="حذف تلقائي للملفات" data-lang-en="Automatic deletion of files"><i class="fas fa-check-circle"></i> حذف تلقائي للملفات</span>
+<span class="privacy-badge" data-lang-ar="كود نظيف ومعياري Clean Code" data-lang-en="Clean and Standard Code"><i class="fas fa-check-circle"></i> كود نظيف ومعياري Clean Code</span>
+<span class="privacy-badge" data-lang-ar="سرية تامة وتشفير" data-lang-en="Complete Confidentiality &amp; Encryption"><i class="fas fa-check-circle"></i> سرية تامة وتشفير</span>
+<span class="privacy-badge" data-lang-ar="دعم ما بعد التسليم" data-lang-en="Post-delivery Support"><i class="fas fa-check-circle"></i> دعم ما بعد التسليم</span>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer>
+<div class="footer-grid">
+<div class="footer-about">
+<div class="footer-brand">
+<i class="fas fa-terminal footer-brand-icon"></i>
+<h3 data-lang-ar="مركز النجاح (Al-Najah Hub)" data-lang-en="Al-Najah Hub (Al-Najah Hub)">مركز النجاح (Al-Najah Hub)</h3>
+</div>
+<p data-lang-ar="البحوث والتقارير الجامعية" data-lang-en="Academic Research &amp; Reports">وجهتك الأولى والموثوقة في العراق للبرمجة وتطوير الويب وحلول السورس كود، جنباً إلى جنب مع إعداد البحوث والتقارير الجامعية الاحترافية. الطلب والاستفسار حصراً عبر حسابنا على الانستقرام.</p>
+<div class="footer-social-links">
+<a class="social-icon ig" href="https://instagram.com/al_najah_hub" target="_blank" title="حساب الانستقرام الرسمي"><i class="fab fa-instagram"></i></a>
+<a class="social-icon tg" href="https://t.me/INBChannel" target="_blank" title="قناة التلجرام"><i class="fab fa-telegram"></i></a>
+<a class="social-icon bot" href="https://t.me/InstantReportsBot" target="_blank" title="بوت الأغلفة الفوري"><i class="fas fa-robot"></i></a>
+</div>
+</div>
+<div class="footer-links-col">
+<h4 data-lang-ar="أقسام المنصة" data-lang-en="Platform Sections">أقسام المنصة</h4>
+<ul class="footer-nav-list">
+<li><a data-lang-ar="مشروع Love 3D والكود" data-lang-en="Love 3D Project &amp; Code" href="#projects-showcase"><i class="fas fa-angle-left"></i> مشروع Love 3D والكود</a></li>
+<li><a data-lang-ar="خدمات البرمجة والحلول" data-lang-en="Programming &amp; Solutions Services" href="#tech-services"><i class="fas fa-angle-left"></i> خدمات البرمجة والحلول</a></li>
+<li><a data-lang-ar="البحوث والتقارير الجامعية" data-lang-en="Academic Research &amp; Reports" href="#academic-services"><i class="fas fa-angle-left"></i> البحوث والتقارير الجامعية</a></li>
+<li><a data-lang-ar="باقات الأسعار والعروض" data-lang-en="Pricing Plans &amp; Offers" href="#pricing"><i class="fas fa-angle-left"></i> باقات الأسعار والعروض</a></li>
+<li><a href="#faq"><i class="fas fa-angle-left"></i><span data-lang-ar="الأسئلة المكررة" data-lang-en="Frequently Asked Questions">الأسئلة المكررة</span></a></li>
+</ul>
+</div>
+<div class="footer-payment-col">
+<h4 data-lang-ar="طرق الدفع والتعامل المعتمدة" data-lang-en="Approved Payment and Transaction Methods">طرق الدفع والتعامل المعتمدة</h4>
+<p class="pay-desc" data-lang-ar="دفع سهل وسريع من كافة محافظات العراق:" data-lang-en="Easy and fast payment from all governorates of Iraq:">دفع سهل وسريع من كافة محافظات العراق:</p>
+<div class="payment-methods-grid">
+<span class="pay-badge pay-zain" data-lang-ar="زين كاش (Zain Cash)" data-lang-en="Zain Cash"><i class="fas fa-mobile-alt"></i> زين كاش (Zain Cash)</span>
+<span class="pay-badge pay-asia" data-lang-ar="آسيا حوالة (Asiacell)" data-lang-en="AsiaHawala (Asiacell)"><i class="fas fa-sim-card"></i> آسيا حوالة (Asiacell)</span>
+<span class="pay-badge pay-card" data-lang-ar="ماستر كارد وبطاقات مصرفية" data-lang-en="Mastercard &amp; Bank Cards"><i class="fas fa-credit-card"></i> ماستر كارد وبطاقات مصرفية</span>
+</div>
+</div>
+</div>
+<div class="footer-bottom-bar">
+<p>جميع الحقوق محفوظة لمركز النجاح © <span id="year">2024</span> | الطلب عبر الانستقرام: <a href="https://instagram.com/al_najah_hub" style="color:var(--insta-pink); text-decoration:none; font-weight:bold;" target="_blank">@al_najah_hub</a></p>
+</div>
+</footer>
+<!-- Scroll to Top Button -->
+<button aria-label="الرجوع للأعلى" class="scroll-top-btn" id="scrollToTop">
+<i class="fas fa-arrow-up"></i>
+</button>
+</div>
+<!-- Floating Contact Bar (Instagram Focused) -->
+<div class="glass floating-bar">
+<div class="offer-text">
+<i class="fab fa-instagram" style="color: var(--insta-pink); font-size: 1.1rem;"></i>
+<span data-lang-ar="الطلب والاستفسار متاح حصراً عبر حسابنا على الانستقرام" data-lang-en="Orders and inquiries are available exclusively via our Instagram account">الطلب والاستفسار متاح حصراً عبر حسابنا على الانستقرام</span>
+</div>
+<div class="bar-actions">
+<a class="btn btn-insta bar-btn" data-lang-ar="اطلب الآن عبر الانستقرام" data-lang-en="Order now via Instagram" href="https://instagram.com/al_najah_hub" target="_blank">
+<i class="fab fa-instagram"></i> اطلب الآن عبر الانستقرام
+            </a>
+<a class="btn btn-primary bar-btn tg-btn" data-lang-ar="القناة" data-lang-en="Channel" href="https://t.me/INBChannel" target="_blank">
+<i class="fab fa-telegram"></i> القناة
+            </a>
+<a class="btn btn-outline bar-btn" data-lang-ar="تجربة كود 3D" data-lang-en="3D Code Experience" href="love.html" target="_blank">
+<i class="fas fa-play"></i> تجربة كود 3D
+            </a>
+</div>
+</div>
+<!-- Custom Script -->
+<script src="script.js"></script>
 </body>
 </html>
